@@ -1,0 +1,221 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, Arial, sans-serif;
+  color: #3E3C3A;
+  line-height: 1.6;
+  background: #F9F9FB;
+}
+
+/* 1. Header & Layout Optimization */
+header {
+  background: #312E52; 
+  color: #fff;
+  padding: 0; /* Remove padding here so background is full width */
+  width: 100%;
+  position: relative;
+}
+
+/* New inner container to keep content aligned but background full-width */
+.header-inner {
+  max-width: 3850px;
+  margin: auto;
+  padding: 25px 35px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+/* 2. Navigation - Desktop Styles */
+nav { 
+  display: relative;
+  align-items: center;
+}
+
+nav a { 
+  position: relative;
+  color: #ffffff;
+  margin-left: 25px; /* Spacing between links */
+  text-decoration: none;
+  font-size: 17px;
+  padding: 6px 0;
+}
+
+/* Hover Animation preserved */
+nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -7px;
+  width: 0; /* Changed from 1 to 0 for cleaner start */
+  height: 3px;
+  background: #b89733; 
+  transition: width 0.3s ease;
+}
+
+nav a:hover::after, nav a.active::after {
+  width: 100%;
+}
+
+/* 3. Hamburger Menu (Hidden on Desktop) */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  cursor: pointer;
+  gap: 5px;
+}
+
+.menu-toggle span {
+  width: 25px;
+  height: 3px;
+  background: #b89733;
+  border-radius: 2px;
+}
+
+/* 4. Mobile Responsive Optimization */
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: flex; /* Show hamburger */
+  }
+
+  nav {
+    display: none; /* Hide nav by default on mobile */
+    flex-direction: column;
+    position: absolute;
+    top: 100%; /* Sits right under the header */
+    left: 0;
+    width: 100%;
+    background: #312E52;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 100;
+  }
+
+  nav.show {
+    display: flex; /* Toggle this with JS */
+  }
+
+  nav a {
+    margin: 15px 0;
+    font-size: 20px;
+  }
+}
+
+
+.container {
+  max-width: 1150px;
+  margin: auto;
+  padding: 60px 25px;
+}
+
+.section {
+  margin-bottom: 60px;
+}
+
+.section h2 {
+  color: #0b3c5d;
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+.section p {
+  font-size: 18px;
+  max-width: 900px;
+}
+
+ul li {
+  margin-bottom: 8px;
+}
+
+.button {
+  display: inline-block;
+  background: #0b3c5d;
+  color: #fff;
+  padding: 12px 26px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 15px;
+  margin-top: 15px;
+}
+
+.button:hover {
+  background: #092f49;
+}
+
+footer {
+  background: #f4f6f8;
+  padding: 25px;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Social icons base */
+.social-icons a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin: 0 8px;
+  border-radius: 50%;
+  background: #f4f6f8;
+  color: #0b3c5d;
+  font-size: 18px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+/* Hover animation */
+.social-icons a:hover {
+  background: #b89733;
+  color: #ffffff;
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+@media (max-width: 768px) {
+  .social-icons a {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    margin: 0 10px;
+  }
+}
+.mobile-icons {
+  display: none;
+  margin-top: 12px;
+}
+
+.mobile-icons a {
+  color: #ffffff;
+  font-size: 20px;
+  margin-right: 15px;
+  transition: transform 0.3s ease;
+}
+
+.mobile-icons a:hover {
+  transform: scale(1.15);
+}
+
+@media (max-width: 768px) {
+  .mobile-icons {
+    display: block;
+  }
+  video {
+    max-width: 100%;
+    height: auto;
+}
+}
+
+
+
+
+
+
