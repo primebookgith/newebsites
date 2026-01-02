@@ -110,10 +110,28 @@
   </div>
 
   <div style="flex: 1; min-width: 100px;">
-<video autoplay muted loop playsinline style="width: 100%; max-width: 300px; border-radius: 20px; border: 3px solid #1a2b48; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+<video id="myVideo" autoplay muted loop playsinline style="width: 100%; max-width: 300px; border-radius: 20px; border: 3px solid #1a2b48; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
         <source src="videos/about-services.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
+<div class="video-wrapper" style="position: relative; display: inline-block;">
+<button id="muteBtn" onclick="toggleMute()" style="
+        position: absolute; 
+        bottom: 15px; 
+        right: 15px; 
+        background: rgba(0,0,0,0.6); 
+        color: white; 
+        border: none; 
+        border-radius: 50%; 
+        width: 40px; 
+        height: 40px; 
+        cursor: pointer; 
+        z-index: 10;">
+        <i id="muteIcon" class="fas fa-volume-mute"></i>
+    </button>
+    </div>
+
+	  
   </div>
 
 </section>
@@ -152,10 +170,29 @@
     const nav = document.getElementById('nav-menu');
     nav.classList.toggle('show');
   }
+	
+function toggleMute() {
+    const video = document.getElementById("myVideo");
+    const icon = document.getElementById("muteIcon");
+
+    if (video.muted) {
+        video.muted = false;
+        icon.classList.remove("fa-volume-mute");
+        icon.classList.add("fa-volume-up");
+        console.log("Video Unmuted");
+    } else {
+        video.muted = true;
+        icon.classList.remove("fa-volume-up");
+        icon.classList.add("fa-volume-mute");
+        console.log("Video Muted");
+    }
+}
+
 </script>
 
 </body>
 </html>
+
 
 
 
