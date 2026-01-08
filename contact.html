@@ -100,23 +100,24 @@
       <a href="mailto:accounts@primebookuae.com" style="text-decoration: none; color: #1a2b48; font-weight: bold;">accounts@primebookuae.com</a><br>
 
 
-           <div class="hours-section" style="margin-bottom: 30px; font-family: Arial, sans-serif;">
+          <div class="hours-section" style="margin-bottom: 30px; font-family: 'Montserrat', sans-serif;">
     <h3 style="font-size: 18px; margin-bottom: 10px; color: #1a2b48;">Hours</h3>
     
     <details style="cursor: pointer; outline: none;">
         <summary style="list-style: none; margin: 0; display: flex; align-items: center; font-size: 16px;">
-            Open today <span style="font-weight: bold; margin-left: 5px;">09:00 am – 05:30 pm</span> 
+            <span id="today-status">Open today</span> 
+            <span id="today-time" style="font-weight: bold; margin-left: 5px;">09:00 am – 05:30 pm</span> 
             <i class="fas fa-chevron-down" style="font-size: 12px; margin-left: 8px; color: #b89733;"></i>
         </summary>
         
-        <table style="width: 100%; max-width: 250px; margin-top: 10px; border-collapse: collapse; font-size: 15px; color: #333;">
-            <tr><td style="padding: 3px 0;">Mon</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
-            <tr style="font-weight: bold; color: #1a2b48;"><td style="padding: 3px 0;">Tue</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
-            <tr><td style="padding: 3px 0;">Wed</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
-            <tr><td style="padding: 3px 0;">Thu</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
-            <tr><td style="padding: 3px 0;">Fri</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
-            <tr><td style="padding: 3px 0;">Sat</td><td style="text-align: right;">09:00 am – 02:30 pm</td></tr>
-            <tr><td style="padding: 3px 0;">Sun</td><td style="text-align: right; color: #999;">Closed</td></tr>
+        <table style="width: 100%; max-width: 280px; margin-top: 10px; border-collapse: collapse; font-size: 15px; color: #333;">
+            <tr id="day-1"><td style="padding: 3px 0;">Monday</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
+            <tr id="day-2"><td style="padding: 3px 0;">Tuesday</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
+            <tr id="day-3"><td style="padding: 3px 0;">Wednesday</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
+            <tr id="day-4"><td style="padding: 3px 0;">Thursday</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
+            <tr id="day-5"><td style="padding: 3px 0;">Friday</td><td style="text-align: right;">09:00 am – 05:30 pm</td></tr>
+            <tr id="day-6"><td style="padding: 3px 0;">Saturday</td><td style="text-align: right;">09:00 am – 02:30 pm</td></tr>
+            <tr id="day-0"><td style="padding: 3px 0;">Sunday</td><td style="text-align: right; color: #999;">Closed</td></tr>
         </table>
     </details>
 </div>
@@ -217,6 +218,46 @@ function toggleMute(videoId, iconId) {
     <a href="terms.html" style="color: #555; text-decoration: none;">Terms & Conditions</a>
   </p>
   </footer>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Get current day (0 = Sunday, 1 = Monday, etc.)
+    const now = new Date();
+    const dayIndex = now.getDay(); 
+
+    // 2. Define your hours schedule
+    const schedule = {
+        1: "09:00 am – 05:30 pm", // Mon
+        2: "09:00 am – 05:30 pm", // Tue
+        3: "09:00 am – 05:30 pm", // Wed
+        4: "09:00 am – 05:30 pm", // Thu
+        5: "09:00 am – 05:30 pm", // Fri
+        6: "09:00 am – 02:30 pm", // Sat
+        0: "Closed"               // Sun
+    };
+
+    // 3. Update the "Open today" summary text
+    const todayTimeSpan = document.getElementById("today-time");
+    const todayStatusSpan = document.getElementById("today-status");
+    
+    if (dayIndex === 0) {
+        todayStatusSpan.innerHTML = "Status:";
+        todayTimeSpan.innerHTML = "Closed today";
+        todayTimeSpan.style.color = "#999";
+    } else {
+        todayTimeSpan.innerHTML = schedule[dayIndex];
+    }
+
+    // 4. Highlight the current day in the table
+    const activeRow = document.getElementById("day-" + dayIndex);
+    if (activeRow) {
+        activeRow.style.fontWeight = "bold";
+        activeRow.style.color = "#1a2b48";
+        // Optional: add a small gold indicator dot or background
+        activeRow.style.backgroundColor = "rgba(184, 151, 51, 0.05)";
+    }
+});
+</script>
+
 
 <script>
   function toggleMenu() {
