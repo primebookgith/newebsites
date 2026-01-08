@@ -35,10 +35,10 @@
       <img src="images/logo.png" alt="Prime Book Logo" style="height: 55px; margin-right: 15px;">
       
       <div style="border-left: 2px solid #b89733; padding-left: 15px;">
-        <h1 style="margin: 0; font-size: 24px; color: #b89733; font-family: Arial, sans-serif; font-weight: 800; line-height: 1;">
+        <h1 style="margin: 0; font-size: 24px; color: #b89733; font-family: Montserrat; font-weight: 800; line-height: 1;">
           PRIME BOOK
         </h1>
-        <h2 style="margin: 4px 0 0 0; font-size: 11px; color: #d1d1d1; font-family: Arial, sans-serif; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;">
+        <h2 style="margin: 4px 0 0 0; font-size: 11px; color: #d1d1d1; font-family: Orbitron; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;">
           Accounting & Bookkeeping
         </h2>
       </div>
@@ -51,29 +51,29 @@
     </div>
 
     <nav id="nav-menu">
+<style>
+        #nav-menu a { color: white; text-decoration: none; margin: 0 12px; font-size: 16px; font-weight: 500; transition: 0.3s; }
+        #nav-menu a:hover { color: #b89733; }
+        #nav-menu a.active { color: #b89733; font-weight: 800; border-bottom: 2px solid #b89733; padding-bottom: 5px; }
+      </style>
       <a href="index.html" class="active">Home</a>
       <a href="about.html">About Us</a>
       <a href="services.html">Services</a>
-      <a href="bookkeeping.html">Bookkeeping</a>
-      <a href="vat-accounting.html">VAT & Accounting</a>
-      <a href="corporate-tax.html">Corporate Tax</a>
+      <a href="bookkeeping.html">Accounting & Bookkeeping</a>
+      <a href="vat-accounting.html">VAT & Corporate Tax</a>
+      <a href="corporate-tax.html">Leadership</a>
       <a href="why-us.html">Why Us</a>
-      <a href="industries.html">Industries</a>
       <a href="contact.html">Contact</a>
     </nav>
-
   </div>
 </header>
-<div class="container">
 
+<div class="container">
   <div class="section" style="text-align: auto; margin-bottom: 40px;">
     <h2 style="color: #1a2b48;">Trusted Accounting & Bookkeeping Services in UAE</h2>
     <p>
-      Prime Book Accounting and Bookkeeping provides reliable Accounting, VAT, and Corporate Tax services to businesses across the UAE.<p>We are your complete financial partner. Let's handle the numbers.</p>
-    </p>
-  </div>
+      We provide reliable Accounting, VAT, and Corporate Tax services to businesses across the UAE. We are your complete financial partner. Let's handle the numbers.</p>
 
-  <div class="section">
     <h2 style="text-align: auto; color: #1a2b48;">Our Core Services</h2>
     <div style="display: flex; justify-content: auto;">
       <ul style="list-style: none; padding: 0; max-width: 800px;">
@@ -96,7 +96,6 @@
           <span style="color: #b89733; font-weight: bold; margin-right: 10px;">✓</span> goAML Registration & Assistance
         </li>
       </ul>
-    </div>
   </div>
 
 <div class="hero-promise-text" style="flex: 1; padding: 20px; min-width: 300px;">
@@ -104,7 +103,7 @@
         The Prime Book Accounting & Bookkeeping <span style="font-size: 3rem; color: #b89733; display: inline-block; animation: float 4s ease-in-out infinite; text-shadow: 3px 7px 10px rgba(0,0,0,0.2);">Promise.</span>
       </h1>
       <p style="font-size: 1.1rem; color: #555; line-height: 1.6; margin-bottom: 25px;">
-       At Prime Book Accounting and Bookkeeping, our mission is to empower businesses with accurate financial insights and dependable bookkeeping solutions. We are committed to simplifying complex accounting processes, ensuring compliance, and delivering clarity that enables our clients to make informed decisions with confidence. By handling the financial details, we free business owners to focus on what truly matters, driving growth and achieving long-term success.
+       Our mission is to empower businesses with accurate financial insights and dependable bookkeeping solutions. We are committed to simplifying complex accounting processes, ensuring compliance, and delivering clarity that enables our clients to make informed decisions with confidence. By handling the financial details, we free business owners to focus on what truly matters, driving growth and achieving long-term success.
       </p>
    </div>
 
@@ -149,10 +148,9 @@
     </button>
     </div>
 </div>
-
-  </div>
-
+ </div>
 </div>
+
 
 <footer>
   <div style="margin-bottom: 20px;">
@@ -197,6 +195,42 @@ function toggleMute() {
     }
 }
 </script>
+
+<script>
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        var popup = document.getElementById('servicePopup');
+        if(popup) {
+            popup.style.display = 'block';
+        }
+    }, 5000); // 5000ms = 5 seconds
+});
+
+function closePopup() {
+    document.getElementById('servicePopup').style.display = 'none';
+}
+</script>
+
+<div id="servicePopup" class="transparent-popup-wrapper" style="display: none;">
+    <div class="popup-inner">
+        <button class="close-overlay" onclick="closePopup()">&times;</button>
+        
+        <div class="graphic-container">
+            <a href="contact.html"style="display: block; text-decoration: none;">
+                <img src="images/prime-popup-design.png" alt="Prime Book Special Offer" class="floating-image">
+            </a>
+        </div>
+               <h3 style="font-weight: 800; color: #1a2b48; margin: 10px 0;">Stress-Free Accounting.<br>All-in-One.<br><span style="color: #b89733;">One Low Monthly Fee.</span></h3>
+            <p style="font-size: 12px; color: #666;">Prime Book Accounting & Bookkeeping takes the complexity out of managing your finances.</p>
+            
+            <div class="popup-promo-box">
+                <h4 style="color: #00a8b5; font-weight: 700; margin-bottom: 5px;">Is Your Accounting a Mess? Here's How to Fix It.</h4>
+                <p style="font-size: 11px; margin-bottom: 15px;">📞 Need help with tax filing or compliance? Contact Prime Book Accounting today!</p>
+                <a href="contact.html" class="learn-more-btn">Contact us for more details</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
