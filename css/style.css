@@ -5,6 +5,21 @@ body {
   line-height: 1.6;
   background: #F9F9FB;
 }
+.section {
+  width: 100%;
+  max-width: 1200px;      /* Keeps content readable on large screens */
+  margin: 0 auto;         /* Centers content */
+  padding: 20px;
+  box-sizing: border-box;
+font-size: 17px;
+}
+
+.section p {
+  text-align: justify;    /* Full width alignment on desktop */
+  line-height: 1.7;
+}
+
+
 
 /* 1. Header & Layout Optimization */
 header {
@@ -115,9 +130,6 @@ nav a:hover::after, nav a.active::after {
   padding: 60px 25px;
 }
 
-.section {
-  margin-bottom: 60px;
-}
 
 .section h2 {
   color: #0b3c5d;
@@ -125,10 +137,6 @@ nav a:hover::after, nav a.active::after {
   margin-bottom: 15px;
 }
 
-.section p {
-  font-size: 18px;
-  max-width: 900px;
-}
 
 ul li {
   margin-bottom: 8px;
@@ -217,9 +225,9 @@ footer {
 
 @keyframes float {
 	0% { transform: translateY(0px); }
-	20% { transform: translateY(-50px); }
-40% { transform: translateX(25px);}
-60% { transform: translateY(30px); }
+	20% { transform: translateY(-20px); }
+40% { transform: translateX(15px);}
+60% { transform: translateY(20px); }
 80% { transform: translateX(5px); }
 	100% { transform: translateY(0px); }
 }
@@ -228,5 +236,74 @@ footer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
+
+<style>
+.transparent-popup-wrapper {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 10000; /* Ensures it is on top of everything */
+    width: 350px;
+    pointer-events: none; /* Allows clicking through empty spaces */
+}
+
+.popup-inner {
+    position: relative;
+    pointer-events: auto; /* Makes the image and button clickable */
+    animation: fadeInSlide 0.8s ease-out;
+}
+.graphic-container {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.floating-image {
+    max-width: 25%; /* Prevents image from being wider than the popup */
+    height: auto;    /* Maintains the original aspect ratio */
+    display: block;  /* Removes bottom spacing/gaps */
+    
+    /* Clean transparent shadow */
+    filter: drop-shadow(0 15px 25px rgba(0,0,0,0.2)); 
+    
+    /* Smooth scaling on hover */
+    transition: transform 0.3s ease-in-out;
+}
+
+.floating-image:hover {
+    transform: scale(1.02);
+}
+
+.close-overlay {
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background: #1a2b48;
+    color: white;
+    border: 2px solid #b89733;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 10001;
+}
+
+@keyframes fadeInSlide {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+    .transparent-popup-wrapper {
+        width: 280px;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+</style>
 
 
