@@ -20,11 +20,11 @@
 <body>
 
 <a href="https://wa.me/+971521859433" 
-   style="position: fixed; bottom: 25px; right: 25px; background: #25D366; color: white; padding: 14px 18px; border-radius: 50px; font-size: 15px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; font-family: sans-serif; font-weight: bold;">
+   style="position: fixed; bottom: 25px; right: 25px; background: #25D366; color: white; padding: 14px 18px; border-radius: 50px; font-size: 15px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; font-family: sans-serif; font-weight: bold;"onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
    <i class="fab fa-whatsapp"></i> WhatsApp
 </a>
 
-<a href="tel:+971521859433" style="position: fixed; bottom: 90px; right: 25px; background: white; color: #b89733; padding: 11px 20px; border-radius: 70px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 3px 5px rgba(0,0,0,0.2); z-index: 500; font-family: sans-serif;">
+<a href="tel:+971521859433" style="position: fixed; bottom: 90px; right: 25px; background: white; color: #b89733; padding: 11px 20px; border-radius: 70px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 3px 5px rgba(0,0,0,0.2); z-index: 500; font-family: sans-serif;"onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
    <i class="fas fa-phone"></i> Call
 </a>
 
@@ -35,10 +35,10 @@
       <img src="images/logo.png" alt="Prime Book Logo" style="height: 55px; margin-right: 15px;">
       
       <div style="border-left: 2px solid #b89733; padding-left: 15px;">
-        <h1 style="margin: 0; font-size: 24px; color: #b89733; font-family: Arial, sans-serif; font-weight: 800; line-height: 1;">
+        <h1 style="margin: 0; font-size: 24px; color: #b89733; font-family: Montserrat; font-weight: 800; line-height: 1;">
           PRIME BOOK
         </h1>
-        <h2 style="margin: 4px 0 0 0; font-size: 11px; color: #d1d1d1; font-family: Arial, sans-serif; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;">
+        <h2 style="margin: 4px 0 0 0; font-size: 11px; color: #d1d1d1; font-family: Orbitron; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;">
           Accounting & Bookkeeping
         </h2>
       </div>
@@ -51,19 +51,23 @@
     </div>
 
     <nav id="nav-menu">
+<style>
+        #nav-menu a { color: white; text-decoration: none; margin: 0 12px; font-size: 16px; font-weight: 500; transition: 0.3s; }
+        #nav-menu a:hover { color: #b89733; }
+        #nav-menu a.active { color: #b89733; font-weight: 800; border-bottom: 2px solid #b89733; padding-bottom: 5px; }
+      </style>
       <a href="index.html">Home</a>
       <a href="about.html">About Us</a>
       <a href="services.html">Services</a>
-      <a href="bookkeeping.html">Bookkeeping</a>
-      <a href="vat-accounting.html">VAT & Accounting</a>
-      <a href="corporate-tax.html">Corporate Tax</a>
+      <a href="bookkeeping.html">Accounting & Bookkeeping</a>
+      <a href="vat-accounting.html">VAT & Corporate Tax</a>
+      <a href="corporate-tax.html">Leadership</a>
       <a href="why-us.html">Why Us</a>
-      <a href="industries.html">Industries</a>
       <a href="contact.html">Contact</a>
     </nav>
-
   </div>
-</header><div class="container">
+</header>
+<div class="container">
 
   <div class="section">
     <h2>Privacy Policy</h2>
@@ -97,7 +101,7 @@
 </div>
 <footer>
   <div style="margin-bottom: 20px;">
-    © 2026 Prime Book Accounting and Bookkeeping LLC. All Rights Reserved.<div style="opacity: 0.76; color: #b89733;">Author- Bibin Babu Puthukkattu</div>
+    © 2026 Prime Book Accounting and Bookkeeping LLC. All Rights Reserved.<div style="opacity: 0.99; color: #bebebe;">Designed & Developed by Bibin Babu Puthukkattu</div>
   </div>
 
   <div class="social-icons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
@@ -111,7 +115,7 @@
   </div>
 
   <p>
-    <a href="privacy.html" style="color: #555; text-decoration: none;">Privacy Policy</a> | 
+    <a href="privacy.html" style="color: #555; text-decoration: none;" class="active">Privacy Policy</a> | 
     <a href="terms.html" style="color: #555; text-decoration: none;">Terms & Conditions</a>
   </p>
   </footer>
