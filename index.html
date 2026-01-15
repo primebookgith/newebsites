@@ -17,28 +17,6 @@
     gtag('config', 'G-52XC9627TC');
   </script>
 
-  #auth-button button {
-    background-color: #007bff; /* Your brand blue */
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
-}
-
-#auth-button button:hover {
-    background-color: #0056b3;
-}
-
-/* Ensure the user avatar doesn't overlap text */
-#user-button {
-    margin-left: 15px;
-    display: inline-block;
-    vertical-align: middle;
-}
-
 </head>
 <body>
 
@@ -69,6 +47,10 @@
       </div>
     </div>
 
+    <div class="auth-container">
+    <div id="auth-button"></div>
+<div id="user-button"></div></div>
+
     <div class="menu-toggle" onclick="toggleMenu()">
       <span></span>
       <span></span>
@@ -92,8 +74,7 @@
       
   
     </nav>
-    <div id="auth-button"></div>
-<div id="user-button"></div>
+    
   </div>
   
 </header>
@@ -295,6 +276,7 @@ function closePopup() {
 
 </body>
 </html>
+
 
 
 
