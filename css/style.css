@@ -372,7 +372,7 @@ footer {
 .clerk-portal-trigger {
     position: fixed !important;
     top: 15px !important;
-    right: 3335px !important;
+    right: 35px !important;
     display: flex !important;
     align-items: center !important;
     gap: 15px !important;
@@ -423,6 +423,7 @@ footer {
         font-size: 11px !important;
     }
 }
+
 
 
 
