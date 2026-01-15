@@ -370,7 +370,7 @@ footer {
 
 /* Position the container at the very top right */
 .fixed-top-right {
-    position: absolute;
+    position: right;
     top: 20px;
     right: 20px;
     z-index: 9999; /* Ensures it stays above all other elements */
@@ -409,4 +409,5 @@ footer {
         font-size: 12px;
     }
 }
+
 
