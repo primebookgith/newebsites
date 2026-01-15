@@ -368,3 +368,38 @@ footer {
 </style>
 
 
+.clerk-floating-portal {
+    position: fixed !important;   /* Floats above the whole page */
+    top: 20px !important;        /* 20px from the very top edge */
+    right: 20px !important;      /* 20px from the very right edge */
+    left: auto !important;       /* Forces it away from the left */
+    z-index: 99999 !important;   /* Makes it stay above the white bar */
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+/* Professional Button Look */
+#auth-button button {
+    background-color: #007bff !important; /* Your brand blue */
+    color: white !important;
+    border: none !important;
+    padding: 10px 22px !important;
+    border-radius: 50px !important; /* Rounded pill shape */
+    font-weight: bold !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    font-size: 14px !important;
+}
+
+/* Mobile Fix */
+@media (max-width: 600px) {
+    .clerk-floating-portal {
+        top: 10px !important;
+        right: 10px !important;
+    }
+    #auth-button button {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+    }
+}
