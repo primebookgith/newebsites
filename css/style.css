@@ -382,7 +382,7 @@ footer {
 /* Style the Button to match your theme */
 #auth-button button {
     background-color: #b89733 !important; /* Your Gold color */
-    color: #1a2a6c !important;
+    color: #ffffff !important;
     padding: 8px 18px !important;
     border: none !important;
     border-radius: 4px !important;
@@ -406,7 +406,7 @@ footer {
     text-decoration: none !important;
     font-weight: bold !important;
     font-size: 14px !important;
-    background: #1a2a6c;
+    background: white;
     padding: 8px 15px;
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -423,6 +423,7 @@ footer {
         font-size: 11px !important;
     }
 }
+
 
 
 
