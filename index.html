@@ -222,12 +222,11 @@ function toggleMute() {
   window.addEventListener('load', async function () {
     await window.Clerk.load();
 
-    if (window.Clerk.user) {
-      // If user is logged in, show a "Go to Portal" button
-      document.getElementById('auth-button').innerHTML = '<a href="portal.html">Client Portal</a>';
-      // Show user profile button
-      window.Clerk.mountUserButton(document.getElementById('user-button'));
-    } else {
+   if (window.Clerk.user) {
+  // Added a class to make it look like a button
+  document.getElementById('auth-button').innerHTML = '<a href="portal.html" style="background: #b89733; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">PORTAL</a>';
+  window.Clerk.mountUserButton(document.getElementById('user-button'));
+} else {
       // If not logged in, show "Login"
       document.getElementById('auth-button').innerHTML = '<button onclick="window.Clerk.openSignIn()">Client Login</button>';
     }
@@ -235,6 +234,7 @@ function toggleMute() {
 </script>
 </body>
 </html>
+
 
 
 
