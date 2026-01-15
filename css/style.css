@@ -368,48 +368,48 @@ footer {
 </style>
 
 
-.clerk-force-top-right {
-    /* POSITIONING: This ignores every other line of code on your site */
+/* Fixed Positioning to break out of the header inner-container */
+.clerk-portal-trigger {
     position: fixed !important;
     top: 25px !important;
-    right: 25px !important;
-    
-    /* OVERRIDE: Stops your site from forcing it to the left/bottom */
-    bottom: auto !important;
-    left: auto !important;
-    transform: none !important;
-    
-    /* DISPLAY: Professional horizontal alignment */
+    right: 35px !important; /* Matches your header-inner padding */
     display: flex !important;
-    flex-direction: row !important;
     align-items: center !important;
     gap: 15px !important;
-    
-    /* PRIORITY: Stays above logos, white bars, and menus */
-    z-index: 2147483647 !important; 
+    z-index: 999999 !important; /* Higher than your popup and header */
 }
 
-/* Make the button look like a high-end Finance Portal button */
+/* Styling the button to match your brand's Gold/Navy theme */
 #auth-button button {
-    background-color: #007bff !important; /* Your brand blue */
-    color: white !important;
-    padding: 12px 24px !important;
-    border-radius: 6px !important;
-    font-weight: bold !important;
+    background-color: #b89733 !important; /* Your Gold color */
+    color: #ffffff !important;
+    padding: 10px 20px !important;
+    border-radius: 4px !important; /* Matches your .button class */
+    font-family: "Segoe UI", Tahoma, sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
     border: none !important;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
     cursor: pointer !important;
-    font-family: 'Arial', sans-serif !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Mobile Fix: Puts it in the top-right corner with smaller padding */
-@media (max-width: 600px) {
-    .clerk-force-top-right {
+#auth-button button:hover {
+    background: #a3852d !important; /* Darker gold */
+    transform: translateY(-2px) !important;
+}
+
+/* Mobile Fix for your 768px breakpoint */
+@media (max-width: 768px) {
+    .clerk-portal-trigger {
         top: 15px !important;
         right: 15px !important;
     }
+    
     #auth-button button {
-        padding: 8px 15px !important;
-        font-size: 12px !important;
+        padding: 8px 12px !important;
+        font-size: 13px !important;
     }
 }
