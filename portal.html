@@ -63,6 +63,31 @@
       await window.Clerk.load();
 
       if (window.Clerk.user) {
+        const userEmail = window.Clerk.user.primaryEmailAddress.emailAddress;
+    const downloadBtn = document.getElementById('report-link');
+    const welcomeMsg = document.getElementById('welcome-subtext');
+
+    // --- CLIENT DATABASE START ---
+    const clientLinks = {
+      "client1@gmail.com": "https://drive.google.com/drive/folders/ABC_LINK_1",
+      "client2@yahoo.com": "https://drive.google.com/drive/folders/XYZ_LINK_2",
+      "newclient@prime.com": "https://drive.google.com/drive/folders/NEW_LINK_3"
+    };
+    // --- CLIENT DATABASE END ---
+
+    if (clientLinks[userEmail]) {
+        // If the email is in our list, give them their link
+        downloadBtn.href = clientLinks[userEmail];
+        downloadBtn.innerHTML = '<i class="fas fa-folder-open"></i> Access My Reports';
+        welcomeMsg.innerText = "Your financial documents are ready for review.";
+    } else {
+        // If they just signed up and you haven't added them yet
+        downloadBtn.href = "javascript:void(0)";
+        downloadBtn.style.background = "#666"; // Grey out the button
+        downloadBtn.innerText = "Setup in Progress...";
+        welcomeMsg.innerText = "Welcome! We are currently setting up your secure folder. Please check back in 24 hours.";
+    }
+
         // 1. Hide loading and show portal
         document.getElementById('loading-screen').style.display = 'none';
         document.getElementById('portal-content').style.display = 'block';
@@ -77,6 +102,7 @@
         // 4. Redirect to home if not logged in
         window.location.href = "index.html";
       }
+      
     });
   </script>
 </body>
