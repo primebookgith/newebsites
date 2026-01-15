@@ -19,6 +19,33 @@
 </head>
 <body>
 
+  <script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_Y29uY2lzZS1tYWxhbXV0ZS01Ny5jbGVyay5hY2NvdW50cy5kZXYk"
+  src="https://concise-malamute-57.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+
+<script>
+  window.addEventListener('load', async function () {
+    await window.Clerk.load();
+
+    if (window.Clerk.user) {
+      // If user is logged in, show a "Go to Portal" button
+      document.getElementById('auth-button').innerHTML = '<a href="portal.html">Client Portal</a>';
+      // Show user profile button
+      window.Clerk.mountUserButton(document.getElementById('user-button'));
+    } else {
+      // If not logged in, show "Login"
+      document.getElementById('auth-button').innerHTML = '<button onclick="window.Clerk.openSignIn()">Client Login</button>';
+    }
+  });
+</script>
+
+<div id="auth-button"></div>
+<div id="user-button"></div>
+
 <a href="https://wa.me/+971521859433" 
    style="position: fixed; bottom: 25px; right: 25px; background: #25D366; color: white; padding: 14px 18px; border-radius: 50px; font-size: 15px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; font-family: sans-serif; font-weight: bold;"onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
    <i class="fab fa-whatsapp"></i> WhatsApp
@@ -238,35 +265,11 @@ function closePopup() {
     </div>
 </div>
 
-<script
-  async
-  crossorigin="anonymous"
-  data-clerk-publishable-key="pk_test_Y29uY2lzZS1tYWxhbXV0ZS01Ny5jbGVyay5hY2NvdW50cy5kZXYk"
-  src="https://concise-malamute-57.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
-  type="text/javascript"
-></script>
 
-<script>
-  window.addEventListener('load', async function () {
-    await window.Clerk.load();
-
-    if (window.Clerk.user) {
-      // If user is logged in, show a "Go to Portal" button
-      document.getElementById('auth-button').innerHTML = '<a href="portal.html">Client Portal</a>';
-      // Show user profile button
-      window.Clerk.mountUserButton(document.getElementById('user-button'));
-    } else {
-      // If not logged in, show "Login"
-      document.getElementById('auth-button').innerHTML = '<button onclick="window.Clerk.openSignIn()">Client Login</button>';
-    }
-  });
-</script>
-
-<div id="auth-button"></div>
-<div id="user-button"></div>
   
 </body>
 </html>
+
 
 
 
