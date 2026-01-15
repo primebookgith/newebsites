@@ -375,7 +375,7 @@ footer {
     right: 20px;
     z-index: 9999; /* Ensures it stays above all other elements */
     display: flex;
-    align-items: center;
+    align-items: right;
     gap: 10px;
 }
 
@@ -409,3 +409,4 @@ footer {
         font-size: 12px;
     }
 }
+
