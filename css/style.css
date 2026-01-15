@@ -368,48 +368,58 @@ footer {
 </style>
 
 
-/* Fixed Positioning to break out of the header inner-container */
+/* --- Clerk Portal Trigger --- */
 .clerk-portal-trigger {
     position: fixed !important;
-    top: 25px !important;
-    right: 35px !important; /* Matches your header-inner padding */
+    top: 15px !important;
+    right: 35px !important;
     display: flex !important;
     align-items: center !important;
     gap: 15px !important;
-    z-index: 999999 !important; /* Higher than your popup and header */
+    z-index: 99999 !important; /* Higher than your header and WhatsApp button */
 }
 
-/* Styling the button to match your brand's Gold/Navy theme */
+/* Style the Button to match your theme */
 #auth-button button {
     background-color: #b89733 !important; /* Your Gold color */
     color: #ffffff !important;
-    padding: 10px 20px !important;
-    border-radius: 4px !important; /* Matches your .button class */
-    font-family: "Segoe UI", Tahoma, sans-serif !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
+    padding: 8px 18px !important;
     border: none !important;
+    border-radius: 4px !important;
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
     cursor: pointer !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
-    transition: all 0.3s ease !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    transition: 0.3s !important;
 }
 
 #auth-button button:hover {
-    background: #a3852d !important; /* Darker gold */
-    transform: translateY(-2px) !important;
+    background-color: #1a2b48 !important; /* Navy on hover */
+    transform: translateY(-2px);
 }
 
-/* Mobile Fix for your 768px breakpoint */
+/* Style the 'Client Portal' link (Visible when logged in) */
+#auth-button a {
+    color: #b89733 !important;
+    text-decoration: none !important;
+    font-weight: bold !important;
+    font-size: 14px !important;
+    background: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Mobile Fix */
 @media (max-width: 768px) {
     .clerk-portal-trigger {
-        top: 15px !important;
+        top: 10px !important;
         right: 15px !important;
     }
-    
     #auth-button button {
-        padding: 8px 12px !important;
-        font-size: 13px !important;
+        padding: 6px 12px !important;
+        font-size: 11px !important;
     }
 }
