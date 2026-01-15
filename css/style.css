@@ -406,7 +406,7 @@ footer {
     text-decoration: none !important;
     font-weight: bold !important;
     font-size: 14px !important;
-    background: white;
+    background: #1a2a6c;
     padding: 8px 15px;
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -423,4 +423,5 @@ footer {
         font-size: 11px !important;
     }
 }
+
 
