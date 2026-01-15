@@ -367,5 +367,46 @@ footer {
 }
 </style>
 
+/* Layout for the Header */
+.main-header {
+    display: flex;
+    justify-content: space-between; /* Pushes items to the far left and right */
+    align-items: center;            /* Centers items vertically */
+    padding: 15px 5%;              /* Adds breathing room on the sides */
+    background-color: #ffffff;      /* Change to your header color */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Styling the Clerk Button to look professional */
+#auth-button button {
+    background-color: #007bff; /* Replace with your brand blue */
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap; /* Prevents text from breaking on small screens */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 600px) {
+    .main-header {
+        padding: 10px 3%;
+    }
+    
+    .logo img {
+        max-width: 120px; /* Makes logo smaller on phones */
+    }
+
+    #auth-button button {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
 
 
