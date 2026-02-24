@@ -77,15 +77,50 @@
 
     <h1>My Media Gallery</h1>
 
-    <div class="container">
-        <div class="gallery">
-            <div class="item"><img src="images/uae_tax_stress.jpg" alt="Photo 1"></div>
-            <div class="item"><img src="images/The_Hidden_Risks_Self_Filing.jpg" alt="Photo 2"></div>
-            <div class="item">
-                <video controls><source src="your-video.mp4" type="video/mp4"></video>
-            </div>
-        </div>
+   <div id="auto-gallery" class="gallery">
     </div>
+
+<script>
+    // 1. CHANGE THESE TWO LINES
+    const username = "primebookgith";
+    const repo = "newebsites";
+    const folder = "images"; // The folder where your photos are
+
+    const galleryContainer = document.getElementById('auto-gallery');
+
+    async function loadGallery() {
+        const url = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
+        
+        try {
+            const response = await fetch(url);
+            const files = await response.json();
+
+            files.forEach(file => {
+                // Check if the file is an image (jpg, png, gif, webp)
+                if (file.name.match(/\.(jpe?g|png|gif|webp)$/i)) {
+                    const item = document.createElement('div');
+                    item.className = 'item';
+                    
+                    // GitHub API provides 'download_url' which is the direct link
+                    item.innerHTML = `
+                        <img src="${file.download_url}" alt="${file.name}">
+                        <div class="caption">${file.name}</div>
+                    `;
+                    
+                    // Link to the Lightbox function we built earlier
+                    item.onclick = () => openLightbox(file.download_url);
+                    
+                    galleryContainer.appendChild(item);
+                }
+            });
+        } catch (error) {
+            console.error("Error loading gallery:", error);
+            galleryContainer.innerHTML = "<p>Could not load images. Check your folder path!</p>";
+        }
+    }
+
+    loadGallery();
+</script>
 
     <div id="lightbox">
         <span class="close">&times;</span>
