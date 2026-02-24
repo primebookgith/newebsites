@@ -80,43 +80,49 @@
    <div id="auto-gallery" class="gallery">
     </div>
 
-<script>
-    // 1. CHANGE THESE TWO LINES
+    <script>
     const username = "primebookgith";
     const repo = "newebsites";
-    const folder = "images"; // The folder where your photos are
+    const folder = "gallery"; // Rename your folder to 'media' if it has both
+    
+    // YOUTUBE: Since these aren't files, add your video IDs here
+    const youtubeVideos = ["mJiGTZm8yR4", "y6120QOlsfU"]; 
 
     const galleryContainer = document.getElementById('auto-gallery');
 
     async function loadGallery() {
-        const url = `https://api.github.com/repos/${username}/${repo}/contents/${folder}`;
-        
+        // 1. Load YouTube Videos first
+        youtubeVideos.forEach(id => {
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `<iframe width="100%" height="200" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe>`;
+            galleryContainer.appendChild(item);
+        });
+
+        // 2. Fetch Files from GitHub Folder
         try {
-            const response = await fetch(url);
+            const response = await fetch(`https://api.github.com/repos/${username}/${repo}/contents/${folder}`);
             const files = await response.json();
 
             files.forEach(file => {
-                // Check if the file is an image (jpg, png, gif, webp)
+                const item = document.createElement('div');
+                item.className = 'item';
+
+                // CHECK IF IMAGE
                 if (file.name.match(/\.(jpe?g|png|gif|webp)$/i)) {
-                    const item = document.createElement('div');
-                    item.className = 'item';
-                    
-                    // GitHub API provides 'download_url' which is the direct link
+                    item.innerHTML = `<img src="${file.download_url}" onclick="openLightbox('${file.download_url}')">`;
+                    galleryContainer.appendChild(item);
+                } 
+                // CHECK IF VIDEO (mp4, webm)
+                else if (file.name.match(/\.(mp4|webm|ogg)$/i)) {
                     item.innerHTML = `
-                        <img src="${file.download_url}" alt="${file.name}">
-                        <div class="caption">${file.name}</div>
-                    `;
-                    
-                    // Link to the Lightbox function we built earlier
-                    item.onclick = () => openLightbox(file.download_url);
-                    
+                        <video controls style="width:100%; height:200px; object-fit:cover;">
+                            <source src="${file.download_url}" type="video/mp4">
+                        </video>`;
                     galleryContainer.appendChild(item);
                 }
             });
-        } catch (error) {
-            console.error("Error loading gallery:", error);
-            galleryContainer.innerHTML = "<p>Could not load images. Check your folder path!</p>";
-        }
+        } catch (e) { console.error("Error naming files", e); }
     }
 
     loadGallery();
