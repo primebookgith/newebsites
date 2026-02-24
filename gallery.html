@@ -18,55 +18,7 @@
     gtag('config', 'G-52XC9627TC');
   </script>
     
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Interactive Gallery</title>
-    <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: white; text-align: center; margin: 0; }
-        .container { max-width: 1200px; margin: auto; padding: 20px; }
-        
-        /* Gallery Grid */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            grid-gap: 15px;
-        }
-
-        .item { cursor: pointer; border-radius: 8px; overflow: hidden; transition: transform 0.3s; }
-        .item:hover { transform: scale(1.03); }
-        
-        .item img, .item video {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
-        }
-
-        /* --- LIGHTBOX CSS --- */
-        #lightbox {
-            display: none; /* Hidden by default */
-            position: fixed;
-            z-index: 1000;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            justify-content: center;
-            align-items: center;
-        }
-
-        #lightbox img {
-            max-width: 90%;
-            max-height: 80%;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        #lightbox .close {
-            position: absolute;
-            top: 20px; right: 30px;
-            font-size: 40px; color: white;
-            cursor: pointer;
-        }
-    </style>
+   
 </head>
 <body>
 
@@ -110,7 +62,7 @@
         #nav-menu a:hover { color: #b89733; }
         #nav-menu a.active { color: #b89733; font-weight: 800; border-bottom: 2px solid #b89733; padding-bottom: 5px; }
       </style>
-      <a href="index.html" class="active">Home</a>
+      <a href="index.html" >Home</a>
       <a href="about.html">About Us</a>
       <a href="services.html">Services</a>
       <a href="bookkeeping.html">Accounting & Bookkeeping</a>
@@ -118,7 +70,7 @@
       <a href="Leadership.html">Leadership</a>
       <a href="why-us.html">Why Us</a>
       <a href="contact.html">Contact</a>
-      <a href="galley.html">Gallery</a>
+      <a href="galley.html"class="active">Gallery</a>
     </nav>
   </div>  
 </header>
