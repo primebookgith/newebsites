@@ -52,8 +52,24 @@ window.addEventListener('load', () => {
 });
 
 async function loadClientDocuments() {
+   const dashboard = document.getElementById('client-dashboard');
+    const displayArea = document.getElementById('document-list');
+    const greetingArea = document.getElementById('user-greeting'); // New line
+    
     const user = window.Clerk.user;
-    if (!user) return;
+    
+    if (!user) {
+        if (dashboard) dashboard.style.display = 'none';
+        return;
+    }
+
+    // Update the greeting with the user's name
+    if (greetingArea) {
+        const firstName = user.firstName || "Client";
+        greetingArea.innerText = `Welcome, ${firstName}`;
+    }
+
+    dashboard.style.display = 'block';
 
     // Fetch documents where client_id matches the logged-in user
     const { data: docs, error } = await sb
