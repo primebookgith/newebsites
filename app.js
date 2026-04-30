@@ -17,3 +17,21 @@ contactForm.addEventListener('submit', async (e) => {
     if (error) alert("Error: " + error.message);
     else alert("Success!");
 });
+// This is a comment, it won't cause an error in app.js
+async function syncUserToSupabase() {
+    if (!window.Clerk || !window.Clerk.user) return;
+
+    const user = window.Clerk.user;
+    
+    // Using upsert to add or update the client info
+    const { data, error } = await supabase
+        .from('leads')
+        .upsert({ 
+            id: user.id, 
+            email_address: user.primaryEmailAddress.emailAddress,
+            full_name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+            last_seen: new Date().toISOString()
+        }, { onConflict: 'id' });
+
+    if (error) console.error("Error:", error.message);
+}
