@@ -100,11 +100,18 @@ async function loadClientDocuments() {
     }
 }
 
-// 5. TRIGGER ON LOAD
+// 5. TRIGGER ON LOAD - Bulletproof version
 window.addEventListener('load', () => {
-    // We wait 2 seconds to be absolutely sure Clerk is ready
-    setTimeout(() => {
-        syncUserToSupabase();
-        loadClientDocuments();
-    }, 2000);
+    // We check every 500ms to see if Clerk has finished loading the user
+    const checkClerk = setInterval(() => {
+        if (window.Clerk && window.Clerk.user) {
+            console.log("Clerk User detected, launching portal...");
+            syncUserToSupabase();
+            loadClientDocuments();
+            clearInterval(checkClerk); // Stop checking once successful
+        }
+    }, 500);
+
+    // Stop checking after 10 seconds so it doesn't run forever if logged out
+    setTimeout(() => clearInterval(checkClerk), 10000);
 });
