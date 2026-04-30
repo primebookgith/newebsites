@@ -79,9 +79,15 @@
  <!-- This section is hidden until the user logs in -->
 <div id="client-dashboard" style="display: none; margin-top: 30px;">
     <div style="background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #eef2f6;">
-        <h2 style="color: #1a1a1a; font-family: 'Inter', sans-serif; margin-top: 0; display: flex; align-items: center; gap: 10px;">
-         <span id="user-greeting" style="background: #b89733; color: white; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Welcome</span>
-         <span style="color: #b89733; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Your Financial Records and Tax Documents are organized and ready for you.</span>
+       <h2 style="color: #1a1a1a; font-family: 'Inter', sans-serif; margin-top: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <span style="background: #b89733; color: white; padding: 5px 12px; border-radius: 6px; font-size: 0.8em; font-weight: 400;">Welcome,</span> 
+    
+    <!-- This span is for the name only - Styled to stand out -->
+    <span id="user-greeting" style="color: #1a2b48; font-weight: 800; font-size: 0.9em; border-bottom: 2px solid #b89733;">Client</span>
+    
+    <span style="color: #b89733; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 400;">
+        Your Financial Records and Tax Documents are organized and ready.
+    </span>
 </h2>
         <p style="color: #666; font-size: 0.9em; margin-bottom: 20px;">Secure, centralized access to your Accounting, VAT, and Corporate Tax records.</p>
         
