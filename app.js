@@ -50,3 +50,42 @@ window.addEventListener('load', () => {
         syncUserToSupabase();
     }, 1500);
 });
+
+async function loadClientDocuments() {
+    const user = window.Clerk.user;
+    if (!user) return;
+
+    // Fetch documents where client_id matches the logged-in user
+    const { data: docs, error } = await sb
+        .from('client_documents')
+        .select('*')
+        .eq('client_id', user.id);
+
+    if (error) {
+        console.error("Error loading docs:", error.message);
+        return;
+    }
+
+    const displayArea = document.getElementById('document-list');
+    if (!displayArea) return;
+
+    if (docs.length === 0) {
+        displayArea.innerHTML = "<p>No documents found for your account.</p>";
+    } else {
+        // Create a simple list of clickable links
+        displayArea.innerHTML = docs.map(doc => `
+            <div style="padding: 10px; border-bottom: 1px solid #eee;">
+                <strong>${doc.document_name}</strong> (${doc.category})<br>
+                <a href="${doc.file_url}" target="_blank" style="color: blue;">Download PDF</a>
+            </div>
+        `).join('');
+    }
+}
+
+// Update your existing load listener to also call this function
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        syncUserToSupabase();
+        loadClientDocuments(); // NEW: Load docs after syncing
+    }, 1500);
+});
