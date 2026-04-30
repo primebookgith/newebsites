@@ -53,15 +53,15 @@ async function loadClientDocuments() {
         return;
     }
 
-    // UPDATE GREETING: This is the fix for the name
-    if (greetingArea) {
-        // Try First Name, then Full Name, then Email prefix as last resort
-        const displayName = user.firstName || 
-                          (user.fullName && user.fullName.split(' ')[0]) || 
-                          user.primaryEmailAddress.emailAddress.split('@')[0];
-        
-        greetingArea.innerText = `Welcome ${displayName},`;
-    }
+   // UPDATE GREETING: Now it ONLY inserts the name
+if (greetingArea) {
+    const displayName = user.firstName || 
+                      (user.fullName && user.fullName.split(' ')[0]) || 
+                      user.primaryEmailAddress.emailAddress.split('@')[0];
+    
+    // We removed the word "Welcome" from here so it doesn't repeat
+    greetingArea.innerText = displayName;
+}
 
     // Show the dashboard container
     if (dashboard) dashboard.style.display = 'block';
