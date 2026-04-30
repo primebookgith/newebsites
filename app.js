@@ -1,11 +1,9 @@
-// 1. Setup - Using 'sb' instead of 'supabase' to avoid naming conflicts
+// 1. SETUP & CONFIGURATION
 var SUPABASE_URL = 'https://plcdgqwrwwitkmbsghkh.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_4EEUEcMMNlkSM7oxSJ0hiQ_zsBdam0T';
-
-// We check the global 'supabase' library to create our 'sb' client
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2. Form Logic
+// 2. CONTACT FORM LOGIC
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
     contactForm.addEventListener('submit', async (e) => {
@@ -22,13 +20,12 @@ if (contactForm) {
     });
 }
 
-// 3. Clerk Sync Logic
+// 3. CLERK SYNC LOGIC
 async function syncUserToSupabase() {
-    // Wait for Clerk to be fully ready
     if (!window.Clerk || !window.Clerk.user) return;
 
     const user = window.Clerk.user;
-    console.log("Syncing user to Supabase:", user.primaryEmailAddress.emailAddress);
+    console.log("Syncing user:", user.primaryEmailAddress.emailAddress);
     
     const { data, error } = await sb
         .from('leads')
@@ -40,108 +37,47 @@ async function syncUserToSupabase() {
         }, { onConflict: 'id' });
 
     if (error) console.error("Sync Error:", error.message);
-    else console.log("User successfully synced to Supabase!");
 }
 
-// 4. Trigger the sync when the page loads or user signs in
-window.addEventListener('load', () => {
-    // Small delay to ensure Clerk is initialized
-    setTimeout(() => {
-        syncUserToSupabase();
-    }, 1500);
-});
-
+// 4. LOAD CLIENT DOCUMENTS & PERSONALIZED GREETING
 async function loadClientDocuments() {
-   const dashboard = document.getElementById('client-dashboard');
-    const displayArea = document.getElementById('document-list');
-    const greetingArea = document.getElementById('user-greeting'); // New line
-    
-    const user = window.Clerk.user;
-    
-    if (!user) {
-        if (dashboard) dashboard.style.display = 'none';
-        return;
-    }
-
-    // Update the greeting with the user's name
-    if (greetingArea) {
-        const firstName = user.firstName || "Client";
-        greetingArea.innerText = `Welcome, ${firstName}`;
-    }
-
-    dashboard.style.display = 'block';
-
-    // Fetch documents where client_id matches the logged-in user
-    const { data: docs, error } = await sb
-        .from('client_documents')
-        .select('*')
-        .eq('client_id', user.id);
-
-    if (error) {
-        console.error("Error loading docs:", error.message);
-        return;
-    }
-
-    const displayArea = document.getElementById('document-list');
-    if (!displayArea) return;
-
-    if (docs.length === 0) {
-        displayArea.innerHTML = "<p>No documents found for your account.</p>";
-    } else {
-        // Create a simple list of clickable links
-        displayArea.innerHTML = docs.map(doc => `
-            <div style="padding: 10px; border-bottom: 1px solid #eee;">
-                <strong>${doc.document_name}</strong> (${doc.category})<br>
-                <a href="${doc.file_url}" target="_blank" style="color: blue;">Download PDF</a>
-            </div>
-        `).join('');
-    }
-}
-
-// Update your existing load listener to also call this function
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        syncUserToSupabase();
-        loadClientDocuments(); // NEW: Load docs after syncing
-    }, 1500);
-});
-
-async function loadClientDocuments() {
-    async function loadClientDocuments() {
     const dashboard = document.getElementById('client-dashboard');
     const displayArea = document.getElementById('document-list');
     const greetingArea = document.getElementById('user-greeting');
     
     const user = window.Clerk.user;
     
-    // 1. Hide dashboard if not logged in
+    // Hide dashboard if no user is logged in
     if (!user) {
         if (dashboard) dashboard.style.display = 'none';
         return;
     }
 
-    // 2. Personalize the Greeting
+    // UPDATE GREETING: This is the fix for the name
     if (greetingArea) {
-        // Clerk stores the name in user.firstName
-        const name = user.firstName || "Client"; 
-        greetingArea.innerText = `Welcome, ${name}`;
+        // Try First Name, then Full Name, then Email prefix as last resort
+        const displayName = user.firstName || 
+                          (user.fullName && user.fullName.split(' ')[0]) || 
+                          user.primaryEmailAddress.emailAddress.split('@')[0];
+        
+        greetingArea.innerText = `Welcome, ${displayName}`;
     }
 
-    // 3. Show the dashboard
+    // Show the dashboard container
     if (dashboard) dashboard.style.display = 'block';
 
-    // 4. Fetch the documents from Supabase
+    // Fetch documents linked to this specific Clerk ID
     const { data: docs, error } = await sb
         .from('client_documents')
         .select('*')
         .eq('client_id', user.id);
 
     if (error) {
-        if (displayArea) displayArea.innerHTML = `<p style="color: red;">Error loading records.</p>`;
+        if (displayArea) displayArea.innerHTML = `<p style="color: red;">Error loading documents.</p>`;
         return;
     }
 
-    // 5. Display the documents (The Attractive Cards)
+    // Render the Attractive Document Cards
     if (displayArea) {
         if (docs.length === 0) {
             displayArea.innerHTML = `
@@ -153,10 +89,10 @@ async function loadClientDocuments() {
                 <div style="background: #fff; border: 1px solid #edeef0; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;" onmouseover="this.style.borderColor='#0052cc'" onmouseout="this.style.borderColor='#edeef0'">
                     <div>
                         <div style="font-weight: 600; color: #333;">${doc.document_name}</div>
-                        <div style="font-size: 0.75rem; color: #0052cc; text-transform: uppercase; font-weight: bold; margin-top: 4px;">${doc.category || 'General'}</div>
+                        <div style="font-size: 0.75rem; color: #0052cc; text-transform: uppercase; font-weight: bold; margin-top: 4px;">${doc.category || 'Tax Record'}</div>
                     </div>
                     <a href="${doc.file_url}" target="_blank" style="background: #0052cc; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85em; font-weight: 500;">
-                        Download
+                        View Document
                     </a>
                 </div>
             `).join('');
@@ -164,10 +100,11 @@ async function loadClientDocuments() {
     }
 }
 
-// Ensure this is inside your window listener
+// 5. TRIGGER ON LOAD
 window.addEventListener('load', () => {
+    // We wait 2 seconds to be absolutely sure Clerk is ready
     setTimeout(() => {
         syncUserToSupabase();
         loadClientDocuments();
-    }, 1500);
+    }, 2000);
 });
