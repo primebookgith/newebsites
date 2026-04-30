@@ -79,16 +79,19 @@
  <!-- This section is hidden until the user logs in -->
 <div id="client-dashboard" style="display: none; margin-top: 30px;">
     <div style="background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #eef2f6;">
-       <h2 style="color: #1a1a1a; font-family: 'Inter', sans-serif; margin-top: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
-    <!-- The gold "Welcome" box -->
-    <span style="background: #b89733; color: white; padding: 5px 12px; border-radius: 6px; font-size: 0.8em; font-weight: 500;">Welcome</span> 
+       <h2 style="color: #1a1a1a; font-family: 'Inter', sans-serif; margin-top: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+    <!-- The "Welcome" box -->
+    <span style="background: #b89733; color: white; padding: 5px 12px; border-radius: 6px; font-size: 0.8em; font-weight: 700;">Welcome</span> 
     
-    <!-- The Name span - JavaScript will fill ONLY the name here -->
-    <span id="user-greeting" style="color: #1a2b48; font-weight: 800; font-size: 0.9em; border-bottom: 2px solid #b89733;"></span>
+    <!-- The Name Container -->
+    <div style="display: inline-flex; align-items: center;">
+        <span id="user-greeting" style="color: #1a2b48; font-weight: 800; font-size: 1em; border-bottom: 2px solid #b89733; line-height: 1.2;"></span>
+        <span style="color: #1a2b48; font-weight: 800; font-size: 1em; margin-right: 5px;">,</span>
+    </div>
     
     <!-- The secondary text -->
-    <span style="color: #b89733; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 700;">
-        Your Financial Records and Tax Documents are ready.
+    <span style="color: #b89733; font-size: 0.8em; font-weight: 700; opacity: 0.9;">
+        your financial records and tax documents are ready.
     </span>
 </h2>
         <p style="color: #666; font-size: 0.9em; margin-bottom: 20px;">Secure, centralized access to your Accounting, VAT, and Corporate Tax records.</p>
