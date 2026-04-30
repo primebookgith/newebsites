@@ -60,7 +60,7 @@ async function loadClientDocuments() {
                           (user.fullName && user.fullName.split(' ')[0]) || 
                           user.primaryEmailAddress.emailAddress.split('@')[0];
         
-        greetingArea.innerText = `Welcome ${displayName}`;
+        greetingArea.innerText = `Welcome ${displayName},`;
     }
 
     // Show the dashboard container
@@ -106,5 +106,5 @@ window.addEventListener('load', () => {
     setTimeout(() => {
         syncUserToSupabase();
         loadClientDocuments();
-    }, 1000);
+    }, 2000);
 });
