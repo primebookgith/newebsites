@@ -620,4 +620,46 @@ footer {
 }
 
 
+.download-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    flex: 1;
+    min-width: 300px;
+    max-width: 450px;
+    text-align: center;
+    border-top: 5px solid #1a2b48; /* Your Navy */
+}
 
+.coming-soon {
+    border-top: 5px solid #ccc;
+    opacity: 0.9;
+}
+
+.status-badge {
+    background: #b89733; /* Your Gold */
+    color: #fff;
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.alternative-links {
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.text-link {
+    color: #1a2b48;
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.os-icon {
+    width: 40px;
+    margin-bottom: 10px;
+}
