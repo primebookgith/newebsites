@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Prime Book Accounting and Bookkeeping</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="stylesheet" href="css/style.css">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="icon" type="image/png" href="images/favicon.png">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-52XC9627TC');
+  </script>
+
+</head>
+<body>
+  
+<a href="https://wa.me/+971521859433" 
+   style="position: fixed; bottom: 25px; right: 25px; background: #25D366; color: white; padding: 14px 18px; border-radius: 50px; font-size: 15px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; font-family: sans-serif; font-weight: bold;"onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+   <i class="fab fa-whatsapp"></i> WhatsApp
+</a>
+
+<a href="tel:+971521859433" style="position: fixed; bottom: 90px; right: 25px; background: white; color: #b89733; padding: 11px 20px; border-radius: 70px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 3px 5px rgba(0,0,0,0.2); z-index: 500; font-family: sans-serif;"onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+   <i class="fas fa-phone"></i> Call
+</a>
+
+<header>
+  <div class="header-inner">
+    
+    <div class="logo-container" style="display: flex; align-items: center;">
+      <img src="images/logo.png" alt="Prime Book Logo" style="height: 55px; margin-right: 15px;">
+      
+      <div style="border-left: 2px solid #b89733; padding-left: 15px;">
+        <h1 style="margin: 0; font-size: 24px; color: #b89733; font-family: Montserrat; font-weight: 800; line-height: 1;">
+          PRIME BOOK
+        </h1>
+        <h2 style="margin: 4px 0 0 0; font-size: 11px; color: #d1d1d1; font-family: Orbitron; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;">
+          Accounting & Bookkeeping
+        </h2>
+      </div>
+    </div>
+
+    
+
+    <div class="menu-toggle" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+    <nav id="nav-menu">
+<style>
+        #nav-menu a { color: white; text-decoration: none; margin: 0 12px; font-size: 16px; font-weight: 500; transition: 0.3s; }
+        #nav-menu a:hover { color: #b89733; }
+        #nav-menu a.active { color: #b89733; font-weight: 800; border-bottom: 2px solid #b89733; padding-bottom: 5px; }
+      </style>
+      <a href="index.html" class="active">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="services.html">Services</a>
+      <a href="bookkeeping.html">Accounting & Bookkeeping</a>
+      <a href="vat-accounting.html">VAT & Corporate Tax</a>
+      <a href="Leadership.html">Leadership</a>
+      <a href="why-us.html">Why Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="Downloads.html">Downloads</a>
+    </nav>
+  </div>  
+</header>
+  <div class="clerk-portal-trigger">
+    <div id="auth-button"></div>
+    <div id="user-button"></div>
+</div>
+
+ <!-- This section is hidden until the user logs in -->
+<div id="client-dashboard" style="display: none; margin-top: 30px;">
+    <div style="background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #eef2f6;">
+       <h2 style="color: #1a1a1a; font-family: 'Inter', sans-serif; margin-top: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+    <!-- The "Welcome" box -->
+    <span style="background: #b89733; color: white; padding: 5px 12px; border-radius: 6px; font-size: 0.9em; font-weight: 700;">Welcome</span> 
+    
+    <!-- The Name Container -->
+    <div style="display: inline-flex; align-items: center;">
+        <span id="user-greeting" style="color: #1a2b48; font-weight: 800; font-size: 1em; border-bottom: 2px solid #b89733; line-height: 1.2;"></span>
+        <span style="color: #1a2b48; font-weight: 800; font-size: 1em; margin-right: 5px;">,</span>
+    </div>
+    
+    <!-- The secondary text -->
+    <span style="color: #b89733; font-size: 0.9em; font-weight: 700; opacity: 0.9;">
+       Your Financial Records and Tax Documents are organized and ready for you.
+    </span>
+</h2>
+        <p style="color: #666; font-size: 0.9em; margin-bottom: 20px;">Secure, centralized access to your Accounting, VAT, and Corporate Tax records.</p>
+        
+        <div id="document-list" style="display: grid; gap: 15px;">
+            <!-- Modern loading state -->
+            <div style="color: #999; font-style: italic;">Verifying credentials...</div>
+        </div>
+    </div>
+</div>
+  
+<div class="container">
+
+<div class="hero-promise-text" style="flex: 1; padding: 20px; min-width: 300px;">
+      <h1 style="color: #1b2b48; font-size: 2.5rem; margin-bottom: 20px; line-height: 1.2;">
+        The Prime Book <span style="font-size: 3rem; color: #b89733; display: inline-block; animation: float 4s ease-in-out infinite; text-shadow: 3px 7px 10px rgba(0,0,0,0.2);">Promise.</span>
+      </h1>
+      <p style="font-size: 1.1rem; color: #555; line-height: 1.6; margin-bottom: 25px;">
+       Our mission is to empower businesses with accurate financial insights and dependable bookkeeping solutions. We are committed to simplifying complex accounting processes, ensuring compliance, and delivering clarity that enables our clients to make informed decisions with confidence. By handling the financial details, we free business owners to focus on what truly matters, driving growth and achieving long-term success.
+      </p>
+   </div>
+
+<div class="hero-text" style="flex: 1; padding: 20px; min-width: 300px;">
+      <h1 style="color: #1a2b48; font-size: 2rem; margin-bottom: 20px; line-height: 1.2;">
+        Accounting, Simplified. <span style="color: #b89733; font-size: 2rem; background: linear-gradient(90deg, #b89733 0%,#A9A9A9 20%, #b89733 30%, #11ffae 50%, #A9A9A9 80%, #b89733 100%); 
+             background-size: 200% auto; 
+             -webkit-background-clip: text; 
+             -webkit-text-fill-color: transparent; 
+             animation: shimmer 4s linear infinite;
+             filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));">Success, Amplified</span></h1>
+     <p>
+            In the fast-evolving UAE business landscape, your focus should be on growth, not paperwork. 
+            At <strong>Prime Book Accounting</strong>, we bridge the gap between complex financial 
+            regulations and seamless business operations.
+        </p>
+        <p style="margin-top: 15px;">
+            We take the "taxing" out of tax compliance. Whether it’s navigating the nuances of 
+            UAE VAT, preparing for the 2026 E-Invoicing mandate, or ensuring your books are 
+            Corporate Tax ready, we bring modern, cloud-based bookkeeping directly to your screen.
+        </p>
+    </div>
+
+    <h2 style="text-align: center; font-size: 1.8rem; color: var(--primary-color);">How Prime Book Helps:</h2>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <h3>📈 Real-Time Clarity</h3>
+            <p>No more waiting for month-end reports. Our integration allows you to see your cash flow, expenses, and profit margins in real-time, whenever you need them.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>✅ FTA Compliance</h3>
+            <p>Stay 100% compliant with Federal Tax Authority standards. From VAT filings to Corporate Tax readiness, we handle the technicalities so you avoid costly penalties.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>💻 Digital-First Strategy</h3>
+            <p>We leverage the latest accounting technology to automate your data entry, minimize human error, and keep your financial data secure and accessible.</p>
+        </div>
+    </div>
+    </div>
+
+
+  <div class="section" style="text-align: auto; margin-bottom: 40px;">
+    <h2 style="color: #1a2b48;">Trusted Accounting & Bookkeeping Services in UAE</h2>
+    <p>
+      We provide reliable Accounting, VAT, and Corporate Tax services to businesses across the UAE. We are your complete financial partner. Let's handle the numbers.</p>
+
+<a href="contact.html" class="button" style="transition: background 0.3s ease;"
+   onmouseover="this.style.backgroundColor='#b89733'" 
+   onmouseout="this.style.backgroundColor='#1a2b48'"><strong>Get Prime Book-ed</a></strong>
+
+    
+  <div class="hero-container" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; padding: 40px 0;">
+
+   <div class="hero-video" style="flex: 0 0 350px; max-width: 100%; text-align: right;">
+     <video id="myVideo" autoplay muted loop playsinline style="width: 100%; max-width: 200%; border-radius: 20px; border: 3px solid #1a2b48; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <source src="videos/tax-2026.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+<div class="video-wrapper" style="position: relative; display: inline-block;">
+<button id="muteBtn" onclick="toggleMute()" style="
+        position: absolute; 
+        bottom: 35px; 
+        right: 15px; 
+        background: rgba(0,0,0,0.6); 
+        color: white; 
+        border: none; 
+        border-radius: 50%; 
+        width: 40px; 
+        height: 40px; 
+        cursor: pointer; 
+        z-index: 10;">
+        <i id="muteIcon" class="fas fa-volume-mute"></i>
+    </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<footer>
+  <div style="margin-bottom: 20px;">
+    © 2026 Prime Book Accounting and Bookkeeping LLC. All Rights Reserved.<div style="opacity: 0.99; color: #bebebe;">Designed & Developed by Bibin Babu Puthukkattu</div>
+  </div>
+
+  <div class="social-icons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px;">
+    <a href="https://www.facebook.com/primebookaccounting" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+    <a href="https://www.linkedin.com/company/prime-book-accounting-and-bookkeeping-llc" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+    <a href="https://www.instagram.com/primebookaccounting" target="_blank" aria-label="Instagram"><i class="fab fa-instagram" style="color: #E1306C;"></i></a>
+    <a href="https://www.tiktok.com/@prime.book.uae" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+    <a href="https://www.x.com/primebookuae" target="_blank" aria-label="X"><i class="fab fa-x-twitter" style="color: black;"></i></a>
+    <a href="https://www.youtube.com/@primebookaccounting" target="_blank" aria-label="YouTube"><i class="fab fa-youtube" style="color: red;"></i></a>
+    <a href="https://wa.me/+971521859433" target="_blank" aria-label="Chat on WhatsApp"><i class="fab fa-whatsapp" style="color: #25D366;"></i></a>
+  </div>
+
+  <p>
+    <a href="privacy.html" style="color: #555; text-decoration: none;">Privacy Policy</a> | 
+    <a href="terms.html" style="color: #555; text-decoration: none;">Terms & Conditions</a>
+  </p>
+  </footer>
+
+<script>
+  function toggleMenu() {
+    const nav = document.getElementById('nav-menu');
+    nav.classList.toggle('show');
+  }
+function toggleMute() {
+    const video = document.getElementById("myVideo");
+    const icon = document.getElementById("muteIcon");
+
+    if (video.muted) {
+        video.muted = false;
+        icon.classList.remove("fa-volume-mute");
+        icon.classList.add("fa-volume-up");
+        console.log("Video Unmuted");
+    } else {
+        video.muted = true;
+        icon.classList.remove("fa-volume-up");
+        icon.classList.add("fa-volume-mute");
+        console.log("Video Muted");
+    }
+}
+</script>
+
+
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_live_Y2xlcmsucHJpbWVib29rdWFlLmNvbSQ"
+  src="https://clerk.primebookuae.com/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+
+<script>
+  window.addEventListener('load', async function () {
+    await window.Clerk.load();
+
+   if (window.Clerk.user) {
+  // Added a class to make it look like a button
+  document.getElementById('auth-button').innerHTML = '<a href="portal.html" style="background: #b89733; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: bold;">PORTAL</a>';
+  window.Clerk.mountUserButton(document.getElementById('user-button'));
+} else {
+      // If not logged in, show "Login"
+      document.getElementById('auth-button').innerHTML = '<button onclick="window.Clerk.openSignIn()">Client Login</button>';
+    }
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+ 
+</div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
