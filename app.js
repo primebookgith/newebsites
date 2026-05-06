@@ -5,7 +5,7 @@
 
 // ─── CONSTANTS ───────────────────────────────────────────────
 var SUPABASE_URL = 'https://plcdgqwrwwitkmbsghkh.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_4EEUEcMMNlkSM7oxSJ0hiQ_zsBdam0T';
+var SUPABASE_KEY = 'sb_publishable_vGe6NG1vU4HLHjhPpm7LYQ_G-TXWMXf';
 var WHATSAPP_NUMBER = '+971521859433';
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
