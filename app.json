@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "primebook-app",
+    "name": "Prime Book",
     "slug": "primebook-app",
     "scheme": "primebook-app",
     "version": "1.0.0",
@@ -14,20 +14,42 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.primebookuae.primebookapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.primebookuae.primebookapp",
+      
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
-    ]
+      "expo-secure-store",
+      "expo-font",
+      ],
+    "extra": {
+      "eas": {
+        "projectId": "03f344a6-4c96-4d88-8f85-c392c1c49cc2"
+      }
+    },
+    "owner": "primebookuae",
+    "plugins": [
+  [
+    "expo-notifications",
+    {
+      "icon": "./assets/icon.png",
+      "color": "#1a2b48"
+    }
+  ]
+],
+"notification": {
+  "androidMode": "default"
+}
   }
 }
