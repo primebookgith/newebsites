@@ -1,762 +1,1138 @@
 // ============================================================
-// PRIME BOOK ACCOUNTING — WEB CLIENT PORTAL
-// Aligned with React Native Client App (v2)
+// PRIME BOOK ACCOUNTING — CLIENT PORTAL
+// Full feature parity with Employee Portal + Client Sign Up
 // ============================================================
 
-// ─── CONSTANTS ───────────────────────────────────────────────
-var SUPABASE_URL = 'https://plcdgqwrwwitkmbsghkh.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_4EEUEcMMNlkSM7oxSJ0hiQ_zsBdam0T';
-var WHATSAPP_NUMBER = '+971521859433';
-var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+import {  ClerkProvider,  SignedIn,  SignedOut,  useSignIn,  useSignUp,  useUser,  useClerk,} from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
+import React, { useState, useEffect, useCallback } from "react";
+import {  StyleSheet,  Text,  View,  TextInput,  TouchableOpacity,  Alert,  Linking,  SafeAreaView,  ScrollView,  RefreshControl,  ActivityIndicator, Platform,  StatusBar,  KeyboardAvoidingView,} from "react-native";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import { supabase } from "./supabase";
+import { decode } from "base64-arraybuffer";
+import { useFonts, Cinzel_700Bold } from "@expo-google-fonts/cinzel";
+import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
-// ─── HELPERS ─────────────────────────────────────────────────
-function formatBytes(bytes) {
-  if (!bytes) return '—';
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
-}
 
-function formatDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: '2-digit', month: 'short', year: 'numeric'
+// ─── CONSTANTS ──────────────────────────────────────────────
+const WHATSAPP_NUMBER = "+971521859433";
+const PUBLISHABLE_KEY = "pk_live_Y2xlcmsucHJpbWVib29rdWFlLmNvbSQ";
+
+// ─── TOKEN CACHE (SecureStore) ───────────────────────────────
+const tokenCache = {
+  async getToken(key) {
+    try { return await SecureStore.getItemAsync(key); }
+    catch { return null; }
+  },
+  async saveToken(key, value) {
+    try { await SecureStore.setItemAsync(key, value); }
+    catch { return; }
+  },
+  async clearToken(key) {
+    try { await SecureStore.deleteItemAsync(key); }
+    catch { return; }
+  },
+};
+
+// ─── HELPERS ────────────────────────────────────────────────
+const openWhatsApp = (type) => {
+  const message =
+    type === "reports"
+      ? "Hi Prime Book Accounting, I would like to request a copy of my latest Financial Reports."
+      : "Hello Prime Book Accounting, I have a general inquiry about my Accounting or Tax Status.";
+  const url = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
+  Linking.openURL(url).catch(() =>
+    Alert.alert("Error", "Please ensure WhatsApp is installed.")
+  );
+};
+
+const formatBytes = (bytes) => {
+  if (!bytes) return "—";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
+};
+
+const formatDate = (iso) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric",
   });
+};
+
+const statusColor = (s) => {
+  if (!s) return "#999";
+  if (s === "FILED" || s === "DONE") return "#2ecc71";
+  if (s === "PENDING") return "#f1c40f";
+  if (s === "OVERDUE") return "#e74c3c";
+  if (s === "N/A") return "#aaa";
+  return "#999";
+};
+
+// ─── LOGO BLOCK ─────────────────────────────────────────────
+function LogoBlock() {
+  return (
+    <View style={styles.logoBlock}>
+      <Text style={styles.logoTitle}>PRIME BOOK</Text>
+      <Text style={styles.logoSub}>Accounting & Bookkeeping</Text>
+      <Text style={styles.nanosubtitle}>ACCURACY • COMPLIANCE • GROWTH</Text>
+    </View>
+  );
 }
 
-function statusColor(s) {
-  if (!s) return '#999';
-  if (s === 'FILED' || s === 'DONE') return '#2ecc71';
-  if (s === 'PENDING') return '#f1c40f';
-  if (s === 'OVERDUE') return '#e74c3c';
-  if (s === 'N/A') return '#aaa';
-  return '#999';
+
+// ─── AUTH SCREEN ─────────────────────────────────────────────
+function AuthScreen() {
+  const [mode, setMode] = useState("signin");
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.authContainer}>
+          <LogoBlock />
+
+          <View style={styles.authTabRow}>
+            <TouchableOpacity
+              style={[styles.authTab, mode === "signin" && styles.authTabActive]}
+              onPress={() => setMode("signin")}
+            >
+              <Text style={[styles.authTabText, mode === "signin" && styles.authTabTextActive]}>
+                Sign In
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.authTab, mode === "signup" && styles.authTabActive]}
+              onPress={() => setMode("signup")}
+            >
+              <Text style={[styles.authTabText, mode === "signup" && styles.authTabTextActive]}>
+                New Client
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {mode === "signin" ? <SignInForm /> : <SignUpForm />}
+
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerLock}>🔒 Authorized Client Access Only</Text>
+            <Text style={styles.footerSub}>Prime Book Accounting • Dubai, UAE 🇦🇪</Text>
+            <Text style={styles.footerPrivacy}>
+              Your data is Encrypted and Securely stored. We never share your information with third parties.
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
 }
 
-function openWhatsApp(type) {
-  var message = type === 'reports'
-    ? 'Hi Prime Book Accounting, I would like to request a copy of my latest Financial Reports.'
-    : 'Hello Prime Book Accounting, I have a general inquiry about my Accounting or Tax Status.';
-  window.open('https://wa.me/' + WHATSAPP_NUMBER.replace('+', '') + '?text=' + encodeURIComponent(message), '_blank');
-}
 
-// ─── CONTACT FORM ─────────────────────────────────────────────
-var contactForm = document.getElementById('contactForm');
-if (contactForm) {
-  contactForm.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    var email = document.getElementById('email').value;
-    var message = document.getElementById('message').value;
-    var btn = contactForm.querySelector('button[type="submit"]');
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
 
-    var result = await sb.from('leads').insert([{
-      email_address: email,
-      message_content: message
-    }]);
+// ─── SIGN IN FORM ────────────────────────────────────────────
+function SignInForm() {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [pending, setPending] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    if (result.error) {
-      alert('Error: ' + result.error.message);
-      btn.disabled = false;
-      btn.textContent = 'Submit';
-    } else {
-      alert('Message sent successfully!');
-      contactForm.reset();
-      btn.disabled = false;
-      btn.textContent = 'Submit';
+  const onRequestCode = async () => {
+    if (!isLoaded) return;
+    const normalised = email.trim().toLowerCase();
+    if (!normalised) {
+      Alert.alert("Required", "Please enter your email address.");
+      return;
     }
-  });
-}
-
-// ─── SYNC USER TO SUPABASE ────────────────────────────────────
-async function syncUserToSupabase() {
-  if (!window.Clerk || !window.Clerk.user) return;
-  var user = window.Clerk.user;
-  await sb.from('leads').upsert({
-    id: user.id,
-    email_address: user.primaryEmailAddress.emailAddress,
-    full_name: ((user.firstName || '') + ' ' + (user.lastName || '')).trim(),
-    last_seen: new Date().toISOString()
-  }, { onConflict: 'id' });
-}
-
-// ─── STATE ───────────────────────────────────────────────────
-var _clientEmail = '';
-var _myDocs = [];
-var _sharedDocs = [];
-var _compliance = null;
-var _isSelectMode = false;
-var _selectedFiles = [];
-
-// ─── MAIN PORTAL LOADER ───────────────────────────────────────
-async function loadPortal() {
-  var user = window.Clerk && window.Clerk.user;
-  var dashboard = document.getElementById('client-dashboard');
-  if (!user || !dashboard) return;
-
-  _clientEmail = user.primaryEmailAddress.emailAddress;
-
-  var firstName = user.firstName || '';
-  var lastName = user.lastName || '';
-  var fullName = (firstName + ' ' + lastName).trim();
-  var displayName = fullName || _clientEmail.split('@')[0];
-  var initials = (firstName && lastName)
-    ? (firstName[0] + lastName[0]).toUpperCase()
-    : (displayName[0] || 'C').toUpperCase();
-
-  // Inject portal HTML
-  dashboard.style.display = 'block';
-  dashboard.innerHTML = buildPortalHTML(displayName, initials, _clientEmail);
-
-  // Wire up events
-  wirePortalEvents();
-
-  // Load data
-  await Promise.all([fetchCompliance(), fetchSharedDocs(), fetchMyDocs()]);
-}
-
-// ─── BUILD PORTAL HTML ────────────────────────────────────────
-function buildPortalHTML(displayName, initials, email) {
-  return `
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600;700&display=swap');
-
-    #client-dashboard * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-
-    #pb-topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 24px; background: #fff;
-      border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    setLoading(true);
+    try {
+      await signIn.create({ identifier: normalised, strategy: "email_code" });
+      setPending(true);
+      Alert.alert("Code Sent", "Check your email inbox for the 6-digit code.");
+    } catch (err) {
+      Alert.alert("Error", err.errors?.[0]?.message || "Could not send code. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    #pb-topbar .pb-brand { line-height: 1; }
-    #pb-topbar .pb-brand-title {
-      font-family: 'Cinzel', serif; font-size: 20px;
-      color: #b89733; letter-spacing: 2px; display: block;
-    }
-    #pb-topbar .pb-brand-sub { font-size: 10px; color: #999; letter-spacing: 0.5px; }
-    #pb-topbar .pb-topright { display: flex; align-items: center; gap: 14px; }
-    #pb-avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      background: #1a2b48; display: flex; align-items: center; justify-content: center;
-      font-family: 'Cinzel', serif; font-size: 14px; color: #b89733; font-weight: 700;
-      cursor: default;
-    }
-    #pb-logout-btn {
-      color: #e74c3c; font-size: 12px; font-weight: 600;
-      background: none; border: none; cursor: pointer; padding: 0;
-    }
-    #pb-logout-btn:hover { text-decoration: underline; }
-
-    #pb-body { max-width: 680px; margin: 0 auto; padding: 0 20px 60px; }
-
-    /* Hero */
-    #pb-hero { padding: 28px 0 16px; }
-    #pb-hero .pb-welcome { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-    #pb-hero .pb-name {
-      font-family: 'Cinzel', serif; font-size: 28px;
-      color: #1a2b48; letter-spacing: 2px; line-height: 1.2;
-      text-transform: uppercase;
-    }
-    #pb-hero .pb-divider { width: 42px; height: 3px; background: #b89733; border-radius: 2px; margin: 10px 0; }
-    #pb-hero .pb-email { font-size: 12px; color: #aaa; }
-
-    /* Compliance */
-    #pb-compliance {
-      background: #1a2b48; border-radius: 16px; padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 16px rgba(26,43,72,0.18);
-    }
-    .pb-comp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .pb-comp-title { color: #fff; font-size: 15px; font-weight: 700; }
-    .pb-comp-live { color: #2ecc71; font-size: 10px; font-weight: 700; }
-    .pb-comp-row { display: flex; justify-content: space-between; align-items: center; }
-    .pb-comp-label { color: #fff; font-size: 13px; font-weight: 600; }
-    .pb-comp-due { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 2px; }
-    .pb-comp-badge {
-      border: 1px solid; border-radius: 8px;
-      padding: 4px 10px; font-size: 12px; font-weight: 700; white-space: nowrap;
-    }
-    .pb-comp-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 14px 0; }
-    .pb-comp-loading { color: #b89733; font-size: 13px; text-align: center; padding: 8px 0; }
-
-    /* Action Grid */
-    #pb-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .pb-action-btn {
-      border: none; border-radius: 14px; padding: 20px 14px; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      transition: opacity 0.18s, transform 0.18s;
-    }
-    .pb-action-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-    .pb-action-btn:active { transform: scale(0.97); }
-    .pb-action-btn .pb-action-icon { font-size: 28px; }
-    .pb-action-btn .pb-action-text { font-size: 12px; font-weight: 700; color: #fff; text-align: center; }
-    .pb-btn-upload { background: #132a50ee; }
-    .pb-btn-reports { background: #b89733; }
-
-    /* Upload progress */
-    #pb-upload-progress {
-      background: #f8f9fa; border: 1px solid #eee; border-radius: 10px;
-      padding: 12px 16px; margin-bottom: 16px; display: none;
-      font-size: 12px; color: #1a2b48; font-weight: 600;
-    }
-    #pb-upload-bar-wrap {
-      background: #e0e0e0; border-radius: 4px; height: 5px; margin-top: 8px; overflow: hidden;
-    }
-    #pb-upload-bar { background: #b89733; height: 100%; width: 0; transition: width 0.3s; border-radius: 4px; }
-
-    /* Sections */
-    .pb-section { margin-bottom: 8px; }
-    .pb-section-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-    .pb-section-title { font-size: 15px; font-weight: 700; color: #1a2b48; }
-    .pb-section-sub { font-size: 11px; color: #999; margin-bottom: 10px; }
-    .pb-section-divider { height: 1px; background: #f0f0f0; margin: 18px 0; }
-
-    /* Bulk select controls */
-    .pb-select-controls { display: flex; align-items: center; gap: 14px; }
-    .pb-select-btn { background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 700; color: #b89733; padding: 0; }
-    .pb-delete-btn { background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 700; color: #e74c3c; padding: 0; }
-    .pb-cancel-btn { display: block; text-align: center; color: #888; font-size: 13px; cursor: pointer; margin-top: 10px; background: none; border: none; width: 100%; }
-
-    /* Empty state */
-    .pb-empty {
-      background: #f8f9fa; border: 1px solid #eee; border-radius: 12px;
-      padding: 28px 20px; text-align: center; margin-bottom: 10px;
-    }
-    .pb-empty-icon { font-size: 32px; margin-bottom: 8px; }
-    .pb-empty-title { color: #aaa; font-size: 14px; font-weight: 600; }
-    .pb-empty-sub { color: #ccc; font-size: 12px; margin-top: 4px; }
-
-    /* Doc rows */
-    .pb-doc-row {
-      display: flex; align-items: center; background: #fff;
-      padding: 14px; border-radius: 12px; margin-bottom: 8px;
-      border: 1px solid #eee; transition: border-color 0.18s;
-      cursor: pointer;
-    }
-    .pb-doc-row:hover { border-color: #b89733; }
-    .pb-doc-row.selected { border-color: #b89733; background: #fffdf5; }
-    .pb-doc-icon { font-size: 22px; margin-right: 12px; flex-shrink: 0; }
-    .pb-doc-info { flex: 1; min-width: 0; }
-    .pb-doc-name { font-size: 13px; font-weight: 600; color: #1a2b48; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .pb-doc-date { font-size: 11px; color: #999; margin-top: 2px; }
-    .pb-doc-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-    .pb-view-btn { background: none; border: none; color: #1a2b48; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; }
-    .pb-view-btn:hover { text-decoration: underline; }
-    .pb-del-btn { background: none; border: none; color: #e74c3c; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; }
-    .pb-del-btn:hover { text-decoration: underline; }
-
-    /* Support */
-    #pb-support-btn {
-      display: block; width: 100%; background: #25D366;
-      border: none; border-radius: 12px; padding: 16px;
-      color: #fff; font-size: 16px; font-weight: 700;
-      cursor: pointer; margin: 24px 0 0; text-align: center;
-      transition: opacity 0.18s;
-    }
-    #pb-support-btn:hover { opacity: 0.88; }
-
-    /* Privacy bar */
-    #pb-privacy {
-      background: #f8f9fa; border: 1px solid #eee; border-radius: 10px;
-      padding: 12px; text-align: center; margin-top: 16px;
-      font-size: 11px; color: #999; line-height: 1.5;
-    }
-
-    /* Footer */
-    #pb-footer { text-align: center; margin-top: 24px; }
-    #pb-footer .pb-footer-main { color: #1a2b48; font-size: 12px; font-weight: 700; }
-    #pb-footer .pb-footer-sub { color: #c19e14; font-size: 11px; margin-top: 4px; }
-  </style>
-
-  <!-- Top Bar -->
-  <div id="pb-topbar">
-    <div class="pb-brand">
-      <span class="pb-brand-title">PRIME BOOK</span>
-      <span class="pb-brand-sub">Client Portal</span>
-    </div>
-    <div class="pb-topright">
-      <div id="pb-avatar">${initials}</div>
-      <button id="pb-logout-btn">Secure Logout</button>
-    </div>
-  </div>
-
-  <div id="pb-body">
-
-    <!-- Hero -->
-    <div id="pb-hero">
-      <div class="pb-welcome">Welcome Back,</div>
-      <div class="pb-name">${displayName}</div>
-      <div class="pb-divider"></div>
-      <div class="pb-email">${email}</div>
-    </div>
-
-    <!-- Compliance -->
-    <div id="pb-compliance">
-      <div class="pb-comp-header">
-        <span class="pb-comp-title">Compliance Status</span>
-        <span class="pb-comp-live">● LIVE</span>
-      </div>
-      <div id="pb-compliance-body">
-        <div class="pb-comp-loading">Loading status…</div>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div id="pb-actions">
-      <button class="pb-action-btn pb-btn-upload" id="pb-upload-btn">
-        <span class="pb-action-icon">📁</span>
-        <span class="pb-action-text" id="pb-upload-label">Upload Documents</span>
-      </button>
-      <button class="pb-action-btn pb-btn-reports" id="pb-reports-btn">
-        <span class="pb-action-icon">📊</span>
-        <span class="pb-action-text">Request Reports</span>
-      </button>
-    </div>
-
-    <!-- Upload progress -->
-    <div id="pb-upload-progress">
-      <span id="pb-upload-status">Uploading…</span>
-      <div id="pb-upload-bar-wrap"><div id="pb-upload-bar"></div></div>
-    </div>
-
-    <!-- Hidden file input -->
-    <input type="file" id="pb-file-input" multiple style="display:none">
-
-    <!-- Shared Docs -->
-    <div class="pb-section">
-      <div class="pb-section-title">Documents from Prime Book</div>
-      <div class="pb-section-sub">Sent by your Accounting Team • read only</div>
-      <div id="pb-shared-list"><div class="pb-empty"><div class="pb-empty-icon">⏳</div><div class="pb-empty-title">Loading…</div></div></div>
-    </div>
-
-    <div class="pb-section-divider"></div>
-
-    <!-- My Docs -->
-    <div class="pb-section">
-      <div class="pb-section-header">
-        <div>
-          <div class="pb-section-title">My Uploaded Submissions</div>
-          <div class="pb-section-sub" id="pb-mydocs-count">Loading…</div>
-        </div>
-        <div id="pb-select-controls" class="pb-select-controls" style="display:none">
-          <button class="pb-select-btn" id="pb-selectall-btn">Select All</button>
-          <button class="pb-delete-btn" id="pb-bulkdelete-btn" style="display:none">Delete (0)</button>
-        </div>
-        <div id="pb-select-toggle" style="display:none">
-          <button class="pb-select-btn" id="pb-enter-select-btn">Select</button>
-        </div>
-      </div>
-      <div id="pb-my-list"><div class="pb-empty"><div class="pb-empty-icon">⏳</div><div class="pb-empty-title">Loading…</div></div></div>
-    </div>
-
-    <!-- Connect Advisor -->
-    <button id="pb-support-btn">💬&nbsp; Connect with Advisor</button>
-
-    <!-- Privacy -->
-    <div id="pb-privacy">🔒 Your portal is encrypted and secured. Data is never shared with third parties.</div>
-
-    <!-- Footer -->
-    <div id="pb-footer">
-      <div class="pb-footer-main">Prime Book Accounting &amp; Bookkeeping</div>
-      <div class="pb-footer-sub">Dubai, UAE 🇦🇪 • ${new Date().getFullYear()}</div>
-    </div>
-
-  </div>
-  `;
-}
-
-// ─── WIRE PORTAL EVENTS ───────────────────────────────────────
-function wirePortalEvents() {
-  // Logout
-  var logoutBtn = document.getElementById('pb-logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async function() {
-      if (confirm('Are you sure you want to sign out of your Prime Book portal?')) {
-        try {
-          await window.Clerk.signOut();
-        } catch(e) {
-          alert('Logout failed. Please try again.');
-        }
-      }
-    });
-  }
-
-  // Upload
-  var uploadBtn = document.getElementById('pb-upload-btn');
-  var fileInput = document.getElementById('pb-file-input');
-  if (uploadBtn && fileInput) {
-    uploadBtn.addEventListener('click', function() { fileInput.click(); });
-    fileInput.addEventListener('change', function(e) {
-      if (e.target.files && e.target.files.length > 0) {
-        handleUpload(Array.from(e.target.files));
-      }
-      fileInput.value = '';
-    });
-  }
-
-  // Reports
-  var reportsBtn = document.getElementById('pb-reports-btn');
-  if (reportsBtn) reportsBtn.addEventListener('click', function() { openWhatsApp('reports'); });
-
-  // Advisor
-  var supportBtn = document.getElementById('pb-support-btn');
-  if (supportBtn) supportBtn.addEventListener('click', function() { openWhatsApp('general'); });
-
-  // Enter select mode
-  var enterSelectBtn = document.getElementById('pb-enter-select-btn');
-  if (enterSelectBtn) {
-    enterSelectBtn.addEventListener('click', function() {
-      _isSelectMode = true;
-      _selectedFiles = [];
-      renderMyDocs();
-    });
-  }
-
-  // Select all
-  var selectAllBtn = document.getElementById('pb-selectall-btn');
-  if (selectAllBtn) {
-    selectAllBtn.addEventListener('click', function() {
-      var all = _myDocs.map(function(d) { return d.name; });
-      _selectedFiles = (_selectedFiles.length === all.length) ? [] : all.slice();
-      renderMyDocs();
-    });
-  }
-
-  // Bulk delete
-  var bulkDelBtn = document.getElementById('pb-bulkdelete-btn');
-  if (bulkDelBtn) {
-    bulkDelBtn.addEventListener('click', function() {
-      if (!_selectedFiles.length) return;
-      if (confirm('Remove ' + _selectedFiles.length + ' file(s)?')) {
-        bulkDelete();
-      }
-    });
-  }
-}
-
-// ─── FETCH COMPLIANCE ─────────────────────────────────────────
-async function fetchCompliance() {
-  var body = document.getElementById('pb-compliance-body');
-  if (!body) return;
-
-  var result = await sb
-    .from('client_compliance')
-    .select('*')
-    .eq('client_email', _clientEmail)
-    .single();
-
-  var c = result.data || {
-    vat_status: 'PENDING',
-    vat_due: 'May 28, 2026',
-    ct_status: 'PENDING',
-    ct_due: 'September 30, 2026'
   };
 
-  _compliance = c;
-
-  body.innerHTML = `
-    <div class="pb-comp-row">
-      <div>
-        <div class="pb-comp-label">VAT Returns Filing</div>
-        <div class="pb-comp-due">Due: ${c.vat_due}</div>
-      </div>
-      <div class="pb-comp-badge" style="border-color:${statusColor(c.vat_status)};color:${statusColor(c.vat_status)}">
-        ● ${c.vat_status}
-      </div>
-    </div>
-    <div class="pb-comp-divider"></div>
-    <div class="pb-comp-row">
-      <div>
-        <div class="pb-comp-label">Corporate Tax Filing</div>
-        <div class="pb-comp-due">Due: ${c.ct_due}</div>
-      </div>
-      <div class="pb-comp-badge" style="border-color:${statusColor(c.ct_status)};color:${statusColor(c.ct_status)}">
-        ● ${c.ct_status}
-      </div>
-    </div>
-  `;
-}
-
-// ─── FETCH SHARED DOCS ────────────────────────────────────────
-async function fetchSharedDocs() {
-  var container = document.getElementById('pb-shared-list');
-  if (!container) return;
-
-  var result = await sb.storage
-    .from('client-documents')
-    .list('shared/' + _clientEmail + '/', {
-      limit: 100,
-      sortBy: { column: 'created_at', order: 'desc' }
-    });
-
-  var docs = (result.data || []).filter(function(d) {
-    return d.metadata && d.metadata.size > 0;
-  });
-  _sharedDocs = docs;
-
-  if (docs.length === 0) {
-    container.innerHTML = `
-      <div class="pb-empty">
-        <div class="pb-empty-icon">📭</div>
-        <div class="pb-empty-title">No documents yet.</div>
-        <div class="pb-empty-sub">Your team will upload statements, reports and filings here.</div>
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = docs.map(function(doc) {
-    return `
-      <div class="pb-doc-row" data-name="${escHtml(doc.name)}" data-folder="shared">
-        <span class="pb-doc-icon">📤</span>
-        <div class="pb-doc-info">
-          <div class="pb-doc-name">${escHtml(doc.name)}</div>
-          <div class="pb-doc-date">${formatDate(doc.created_at)} • ${formatBytes(doc.metadata && doc.metadata.size)}</div>
-        </div>
-        <div class="pb-doc-actions">
-          <button class="pb-view-btn">SHOW</button>
-        </div>
-      </div>`;
-  }).join('');
-
-  container.querySelectorAll('.pb-doc-row').forEach(function(row) {
-    row.querySelector('.pb-view-btn').addEventListener('click', function(e) {
-      e.stopPropagation();
-      viewDocument(row.dataset.name, 'shared');
-    });
-    row.addEventListener('click', function() {
-      viewDocument(row.dataset.name, 'shared');
-    });
-  });
-}
-
-// ─── FETCH MY DOCS ────────────────────────────────────────────
-async function fetchMyDocs() {
-  var result = await sb.storage
-    .from('client-documents')
-    .list('uploads/' + _clientEmail + '/', {
-      limit: 100,
-      sortBy: { column: 'created_at', order: 'desc' }
-    });
-
-  _myDocs = (result.data || []).filter(function(d) {
-    return d.metadata && d.metadata.size > 0;
-  });
-  renderMyDocs();
-}
-
-// ─── RENDER MY DOCS ───────────────────────────────────────────
-function renderMyDocs() {
-  var container = document.getElementById('pb-my-list');
-  var countEl = document.getElementById('pb-mydocs-count');
-  var selectToggle = document.getElementById('pb-select-toggle');
-  var selectControls = document.getElementById('pb-select-controls');
-  var bulkDelBtn = document.getElementById('pb-bulkdelete-btn');
-  var selectAllBtn = document.getElementById('pb-selectall-btn');
-
-  if (!container) return;
-
-  if (countEl) {
-    countEl.textContent = _myDocs.length + ' file' + (_myDocs.length !== 1 ? 's' : '') + ' uploaded';
-  }
-
-  if (selectToggle) selectToggle.style.display = (!_isSelectMode && _myDocs.length > 0) ? '' : 'none';
-  if (selectControls) selectControls.style.display = _isSelectMode ? '' : 'none';
-
-  if (selectAllBtn) {
-    selectAllBtn.textContent = (_selectedFiles.length === _myDocs.length && _myDocs.length > 0) ? 'Unselect All' : 'Select All';
-  }
-  if (bulkDelBtn) {
-    bulkDelBtn.style.display = (_isSelectMode && _selectedFiles.length > 0) ? '' : 'none';
-    bulkDelBtn.textContent = 'Delete (' + _selectedFiles.length + ')';
-  }
-
-  if (_myDocs.length === 0) {
-    container.innerHTML = `
-      <div class="pb-empty">
-        <div class="pb-empty-icon">📂</div>
-        <div class="pb-empty-title">No documents uploaded yet.</div>
-        <div class="pb-empty-sub">Tap "Upload Documents" above to send files to your Prime Book team.</div>
-      </div>`;
-    return;
-  }
-
-  var html = _myDocs.map(function(doc) {
-    var isSelected = _selectedFiles.indexOf(doc.name) !== -1;
-    return `
-      <div class="pb-doc-row${isSelected ? ' selected' : ''}" data-name="${escHtml(doc.name)}">
-        <span class="pb-doc-icon">${_isSelectMode ? (isSelected ? '✅' : '⭕') : '📄'}</span>
-        <div class="pb-doc-info">
-          <div class="pb-doc-name">${escHtml(doc.name)}</div>
-          <div class="pb-doc-date">${formatDate(doc.created_at)} • ${formatBytes(doc.metadata && doc.metadata.size)}</div>
-        </div>
-        ${!_isSelectMode ? `
-        <div class="pb-doc-actions">
-          <button class="pb-view-btn" data-action="view">VIEW</button>
-          <button class="pb-del-btn" data-action="del">DEL</button>
-        </div>` : ''}
-      </div>`;
-  }).join('');
-
-  if (_isSelectMode) {
-    html += `<button class="pb-cancel-btn" id="pb-cancel-select">Cancel Selection</button>`;
-  }
-
-  container.innerHTML = html;
-
-  // Wire doc row events
-  container.querySelectorAll('.pb-doc-row').forEach(function(row) {
-    var name = row.dataset.name;
-
-    if (_isSelectMode) {
-      row.addEventListener('click', function() {
-        var idx = _selectedFiles.indexOf(name);
-        if (idx === -1) _selectedFiles.push(name);
-        else _selectedFiles.splice(idx, 1);
-        renderMyDocs();
-      });
-    } else {
-      var viewBtn = row.querySelector('[data-action="view"]');
-      var delBtn = row.querySelector('[data-action="del"]');
-      if (viewBtn) viewBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        viewDocument(name, 'uploads');
-      });
-      if (delBtn) delBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        deleteDocument(name);
-      });
-      row.addEventListener('click', function() {
-        viewDocument(name, 'uploads');
-      });
+  const onVerify = async () => {
+    if (!isLoaded) return;
+    if (!code.trim()) {
+      Alert.alert("Required", "Please enter the verification code.");
+      return;
     }
-  });
-
-  var cancelBtn = document.getElementById('pb-cancel-select');
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', function() {
-      _isSelectMode = false;
-      _selectedFiles = [];
-      renderMyDocs();
-    });
-  }
-}
-
-// ─── VIEW DOCUMENT ────────────────────────────────────────────
-async function viewDocument(fileName, folder) {
-  var result = await sb.storage
-    .from('client-documents')
-    .createSignedUrl(folder + '/' + _clientEmail + '/' + fileName, 300);
-
-  if (result.error) {
-    alert('Could not open document. Please try again.');
-    return;
-  }
-  window.open(result.data.signedUrl, '_blank');
-}
-
-// ─── DELETE DOCUMENT ──────────────────────────────────────────
-async function deleteDocument(fileName) {
-  if (!confirm('Remove "' + fileName + '"?')) return;
-  var result = await sb.storage
-    .from('client-documents')
-    .remove(['uploads/' + _clientEmail + '/' + fileName]);
-
-  if (result.error) {
-    alert('Delete failed. Please try again.');
-  } else {
-    await fetchMyDocs();
-  }
-}
-
-// ─── BULK DELETE ─────────────────────────────────────────────
-async function bulkDelete() {
-  var paths = _selectedFiles.map(function(n) {
-    return 'uploads/' + _clientEmail + '/' + n;
-  });
-  var result = await sb.storage.from('client-documents').remove(paths);
-  if (result.error) {
-    alert('Could not complete bulk delete.');
-  } else {
-    _selectedFiles = [];
-    _isSelectMode = false;
-    await fetchMyDocs();
-  }
-}
-
-// ─── UPLOAD ───────────────────────────────────────────────────
-async function handleUpload(files) {
-  var progressEl = document.getElementById('pb-upload-progress');
-  var statusEl = document.getElementById('pb-upload-status');
-  var barEl = document.getElementById('pb-upload-bar');
-  var labelEl = document.getElementById('pb-upload-label');
-  var uploadBtn = document.getElementById('pb-upload-btn');
-
-  if (uploadBtn) uploadBtn.disabled = true;
-  if (labelEl) labelEl.textContent = 'Uploading…';
-  if (progressEl) progressEl.style.display = 'block';
-
-  var ok = 0, fail = 0;
-  for (var i = 0; i < files.length; i++) {
-    var file = files[i];
-    if (statusEl) statusEl.textContent = 'Uploading ' + (i + 1) + ' of ' + files.length + ': ' + file.name;
-    if (barEl) barEl.style.width = Math.round(((i) / files.length) * 100) + '%';
-
+    setLoading(true);
     try {
-      var clean = file.name.replace(/\s+/g, '_');
-      var parts = clean.split('.');
-      var ext = parts.length > 1 ? parts.pop() : '';
-      var base = ext ? parts.join('.') : clean;
-      var path = 'uploads/' + _clientEmail + '/' + base + '_' + Date.now() + (ext ? '.' + ext : '');
-
-      var arrayBuffer = await file.arrayBuffer();
-      var result = await sb.storage
-        .from('client-documents')
-        .upload(path, arrayBuffer, {
-          contentType: file.type || 'application/octet-stream',
-          upsert: true
-        });
-
-      if (result.error) throw result.error;
-      ok++;
-    } catch (e) {
-      fail++;
+      const result = await signIn.attemptFirstFactor({ strategy: "email_code", code });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+      }
+    } catch (err) {
+      Alert.alert("Verification Failed", err.errors?.[0]?.message || "Invalid or expired code.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  if (!pending) {
+    return (
+      <View style={styles.formCard}>
+        <Text style={styles.formCardTitle}>Welcome Back</Text>
+        <Text style={styles.formCardSub}>
+          Enter your registered email to receive a secure access code.
+        </Text>
+
+        <Text style={styles.label}>Client Email</Text>
+        <TextInput
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          style={styles.input}
+          placeholder="client.tax@company.com"
+          placeholderTextColor="#bbb"
+          value={email}
+          onChangeText={setEmail}
+          returnKeyType="done"
+          onSubmitEditing={onRequestCode}
+        />
+
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={onRequestCode}
+          disabled={loading}
+        >
+          {loading
+            ? <ActivityIndicator color="#fff" size="small" />
+            : <Text style={styles.buttonText}>Get Access Code</Text>
+          }
+        </TouchableOpacity>
+      </View>
+    );
   }
 
-  if (barEl) barEl.style.width = '100%';
-  if (statusEl) statusEl.textContent = ok + ' file(s) uploaded' + (fail ? ', ' + fail + ' failed' : '') + '.';
+  return (
+    <View style={styles.formCard}>
+      <Text style={styles.formCardTitle}>Enter Your Code</Text>
+      <Text style={styles.formCardSub}>A 6-digit code was sent to</Text>
+      <Text style={styles.codeEmailDisplay}>{email}</Text>
 
-  setTimeout(function() {
-    if (progressEl) progressEl.style.display = 'none';
-    if (barEl) barEl.style.width = '0';
-  }, 2500);
+      <Text style={styles.label}>Verification Code</Text>
+      <TextInput
+        style={[styles.input, styles.codeInput]}
+        placeholder="• • • • • •"
+        keyboardType="number-pad"
+        maxLength={6}
+        value={code}
+        onChangeText={setCode}
+        returnKeyType="done"
+        onSubmitEditing={onVerify}
+      />
 
-  if (labelEl) labelEl.textContent = 'Upload Documents';
-  if (uploadBtn) uploadBtn.disabled = false;
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: "#b89733" }, loading && styles.buttonDisabled]}
+        onPress={onVerify}
+        disabled={loading}
+      >
+        {loading
+          ? <ActivityIndicator color="#fff" size="small" />
+          : <Text style={styles.buttonText}>Verify & Enter Portal</Text>
+        }
+      </TouchableOpacity>
 
-  await fetchMyDocs();
+      <TouchableOpacity
+        style={styles.backLink}
+        onPress={() => { setPending(false); setCode(""); }}
+      >
+        <Text style={styles.backLinkText}>← Use a different email</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
-// ─── ESCAPE HTML ─────────────────────────────────────────────
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+// ─── SIGN UP FORM ────────────────────────────────────────────
+function SignUpForm() {
+  const { signUp, setActive, isLoaded } = useSignUp();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [pending, setPending] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-// ─── TRIGGER ON LOAD ─────────────────────────────────────────
-window.addEventListener('load', function() {
-  var checkClerk = setInterval(function() {
-    if (window.Clerk && window.Clerk.user) {
-      clearInterval(checkClerk);
-      syncUserToSupabase();
-      loadPortal();
+  const onRegister = async () => {
+    if (!isLoaded) return;
+    if (!firstName.trim() || !email.trim()) {
+      Alert.alert("Required", "Please enter your First Name and Email Address.");
+      return;
     }
-  }, 500);
+    setLoading(true);
+    try {
+      await signUp.create({
+        emailAddress: email.trim().toLowerCase(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setPending(true);
+      Alert.alert("Code Sent", "A verification code has been sent to your email.");
+    } catch (err) {
+      Alert.alert(
+        "Registration Error",
+        err.errors?.[0]?.message || "Could not create account. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  setTimeout(function() { clearInterval(checkClerk); }, 10000);
+  const onVerify = async () => {
+    if (!isLoaded) return;
+    if (!code.trim()) {
+      Alert.alert("Required", "Please enter the verification code.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+      } else {
+        Alert.alert("Incomplete", "Verification not complete. Please try again.");
+      }
+    } catch (err) {
+      Alert.alert(
+        "Verification Failed",
+        err.errors?.[0]?.message || "Invalid or expired code."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!pending) {
+    return (
+      <View style={styles.formCard}>
+        <Text style={styles.formCardTitle}>Create Your Account</Text>
+        <Text style={styles.formCardSub}>
+          Register to access your Prime Book Client Portal • Compliance Status, Documents, and Direct Advisor Contact.
+        </Text>
+
+        <View style={styles.nameRow}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <Text style={styles.label}>First Name *</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Jijo"
+              placeholderTextColor="#bbb"
+              value={firstName}
+              onChangeText={setFirstName}
+              autoCapitalize="words"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="George"
+              placeholderTextColor="#bbb"
+              value={lastName}
+              onChangeText={setLastName}
+              autoCapitalize="words"
+            />
+          </View>
+        </View>
+
+        <Text style={styles.label}>Email Address *</Text>
+        <TextInput
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          style={styles.input}
+          placeholder="jijo.george@company.com"
+          placeholderTextColor="#bbb"
+          value={email}
+          onChangeText={setEmail}
+        />
+
+        <View style={styles.privacyNotice}>
+          <Text style={styles.privacyNoticeText}>
+            🔐  By registering, your data is encrypted end-to-end and stored securely.
+            Prime Book will never share your information with third parties.
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={onRegister}
+          disabled={loading}
+        >
+          {loading
+            ? <ActivityIndicator color="#fff" size="small" />
+            : <Text style={styles.buttonText}>Register & Get Code</Text>
+          }
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.formCard}>
+      <Text style={styles.formCardTitle}>Verify Your Email</Text>
+      <Text style={styles.formCardSub}>A 6-digit code was sent to</Text>
+      <Text style={styles.codeEmailDisplay}>{email}</Text>
+
+      <Text style={styles.label}>Verification Code</Text>
+      <TextInput
+        style={[styles.input, styles.codeInput]}
+        placeholder="• • • • • •"
+        keyboardType="number-pad"
+        maxLength={6}
+        value={code}
+        onChangeText={setCode}
+        returnKeyType="done"
+        onSubmitEditing={onVerify}
+      />
+
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: "#b89733" }, loading && styles.buttonDisabled]}
+        onPress={onVerify}
+        disabled={loading}
+      >
+        {loading
+          ? <ActivityIndicator color="#fff" size="small" />
+          : <Text style={styles.buttonText}>Verify & Enter Portal</Text>
+        }
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.backLink}
+        onPress={() => { setPending(false); setCode(""); }}
+      >
+        <Text style={styles.backLinkText}>← Edit details</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// ─── DASHBOARD ──────────────────────────────────────────────
+function Dashboard() {
+  const { signOut } = useClerk();
+  const { user } = useUser();
+
+  const clientEmail = user?.primaryEmailAddress?.emailAddress || "";
+  const firstName = user?.firstName || "";
+  const lastName = user?.lastName || "";
+  const fullName = [firstName, lastName].filter(Boolean).join(" ");
+  const displayName = fullName || clientEmail.split("@")[0];
+  const initials = firstName && lastName
+    ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+    : displayName[0]?.toUpperCase() || "C";
+
+  const [uploading, setUploading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [myDocs, setMyDocs] = useState([]);
+  const [loadingMyDocs, setLoadingMyDocs] = useState(true);
+  const [sharedDocs, setSharedDocs] = useState([]);
+  const [loadingSharedDocs, setLoadingSharedDocs] = useState(true);
+  const [compliance, setCompliance] = useState(null);
+  const [loadingCompliance, setLoadingCompliance] = useState(true);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  
+
+  // ── Fetch my uploads ──
+  const fetchMyDocs = useCallback(async () => {
+    if (!clientEmail) return;
+    try {
+      const { data, error } = await supabase.storage
+        .from("client-documents")
+        .list(`uploads/${clientEmail}/`, {
+          limit: 100,
+          sortBy: { column: "created_at", order: "desc" },
+        });
+      if (error) throw error;
+      setMyDocs((data || []).filter((d) => d.metadata?.size > 0));
+    } catch (err) {
+      console.error("fetchMyDocs:", err);
+    } finally {
+      setLoadingMyDocs(false);
+    }
+  }, [clientEmail]);
+
+  // ── Fetch Prime Book shared docs ──
+  const fetchSharedDocs = useCallback(async () => {
+    if (!clientEmail) return;
+    try {
+      const { data, error } = await supabase.storage
+        .from("client-documents")
+        .list(`shared/${clientEmail}/`, {
+          limit: 100,
+          sortBy: { column: "created_at", order: "desc" },
+        });
+      if (error && error.message !== "The resource was not found") throw error;
+      setSharedDocs((data || []).filter((d) => d.metadata?.size > 0));
+    } catch (err) {
+      console.error("fetchSharedDocs:", err);
+    } finally {
+      setLoadingSharedDocs(false);
+    }
+  }, [clientEmail]);
+
+  // ── Fetch compliance ──
+  const fetchCompliance = useCallback(async () => {
+    if (!clientEmail) return;
+    try {
+      const { data, error } = await supabase
+        .from("client_compliance")
+        .select("*")
+        .eq("client_email", clientEmail)
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      setCompliance(
+        data || {
+          vat_status: "PENDING",
+          vat_due: "May 28, 2026",
+          ct_status: "PENDING",
+          ct_due: "September 30, 2026",
+        }
+      );
+    } catch (err) {
+      console.error("fetchCompliance:", err);
+    } finally {
+      setLoadingCompliance(false);
+    }
+  }, [clientEmail]);
+
+
+
+  useEffect(() => {
+    fetchMyDocs();
+    fetchSharedDocs();
+    fetchCompliance();
+    registerForPushNotifications();
+  }, [fetchMyDocs, fetchSharedDocs, fetchCompliance, registerForPushNotifications]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchMyDocs(), fetchSharedDocs(), fetchCompliance()]);
+    setRefreshing(false);
+  }, [fetchMyDocs, fetchSharedDocs, fetchCompliance]);
+
+  // ── Upload ──
+  const uploadDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "*/*",
+        copyToCacheDirectory: true,
+        multiple: true,
+      });
+      if (result.canceled || !result.assets?.length) return;
+      setUploading(true);
+      let ok = 0, fail = 0;
+      for (const file of result.assets) {
+        try {
+          const base64 = await FileSystem.readAsStringAsync(file.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const arrayBuffer = decode(base64);
+          const clean = file.name.replace(/\s+/g, "_");
+          const ext = clean.includes(".") ? clean.split(".").pop() : "";
+          const base = ext ? clean.slice(0, -(ext.length + 1)) : clean;
+          const path = `uploads/${clientEmail}/${base}_${Date.now()}.${ext}`;
+          const { error } = await supabase.storage
+            .from("client-documents")
+            .upload(path, arrayBuffer, {
+              contentType: file.mimeType || "application/octet-stream",
+              upsert: true,
+            });
+          if (error) throw error;
+          ok++;
+        } catch { fail++; }
+      }
+      Alert.alert(
+        fail === 0 ? "Uploaded ✓" : "Partial Upload",
+        `${ok} file(s) uploaded${fail ? `, ${fail} failed` : ""}.`
+      );
+      await fetchMyDocs();
+    } catch (err) {
+      Alert.alert("Upload Failed", err.message || "Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ── View doc ──
+  const viewDocument = async (fileName, folder = "uploads") => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("client-documents")
+        .createSignedUrl(`${folder}/${clientEmail}/${fileName}`, 300);
+      if (error) throw error;
+      await Linking.openURL(data.signedUrl);
+    } catch {
+      Alert.alert("Error", "Could not open document. Please try again.");
+    }
+  };
+
+  // ── Delete single ──
+  const deleteDocument = (fileName) => {
+    Alert.alert("Delete Document", `Remove "${fileName}"?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete", style: "destructive",
+        onPress: async () => {
+          const { error } = await supabase.storage
+            .from("client-documents")
+            .remove([`uploads/${clientEmail}/${fileName}`]);
+          if (error) Alert.alert("Error", "Delete failed.");
+          else await fetchMyDocs();
+        },
+      },
+    ]);
+  };
+
+  // ── Bulk delete ──
+  const deleteSelected = () => {
+    if (!selectedFiles.length) return;
+    Alert.alert("Bulk Delete", `Remove ${selectedFiles.length} file(s)?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete All", style: "destructive",
+        onPress: async () => {
+          const paths = selectedFiles.map((n) => `uploads/${clientEmail}/${n}`);
+          const { error } = await supabase.storage
+            .from("client-documents").remove(paths);
+          if (error) Alert.alert("Error", "Could not complete bulk delete.");
+          else {
+            setSelectedFiles([]);
+            setIsSelectMode(false);
+            await fetchMyDocs();
+          }
+        },
+      },
+    ]);
+  };
+
+  const toggleSelect = (fileName) =>
+    setSelectedFiles((prev) =>
+      prev.includes(fileName) ? prev.filter((f) => f !== fileName) : [...prev, fileName]
+    );
+
+  const selectAllFiles = () => {
+    const all = myDocs.map((d) => d.name);
+    setSelectedFiles(selectedFiles.length === all.length ? [] : all);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Secure Logout",
+      "Are you sure you want to sign out of your Prime Book portal?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign Out", style: "destructive",
+          onPress: async () => {
+            try { await signOut(); }
+            catch { Alert.alert("Error", "Logout failed."); }
+          },
+        },
+      ]
+    );
+  };
+
+  const registerForPushNotifications = useCallback(async () => {
+  if (!clientEmail) return;
+  try {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") return;
+
+    const tokenData = await Notifications.getExpoPushTokenAsync({
+      projectId: "03f344a6-4c96-4d88-8f85-c392c1c49cc2", // ← replace with yours from app.json
+    });
+
+    await supabase
+      .from("client_push_tokens")
+      .upsert({
+        client_email: clientEmail,
+        push_token: tokenData.data,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "client_email" });
+
+  } catch (err) {
+    console.error("Push token error:", err);
+  }
+}, [clientEmail]);
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" translucent={false} />
+
+      {/* ── Top Bar ── */}
+      <View style={styles.topBar}>
+        <View>
+          <Text style={styles.topBarTitle}>PRIME BOOK</Text>
+          <Text style={styles.topBarSub}>Client Portal</Text>
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <View style={styles.topBarAvatar}>
+            <Text style={styles.topBarAvatarText}>{initials}</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={{ marginTop: 3 }}>
+            <Text style={styles.logoutText}>Secure Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 60 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#b89733"]}
+            tintColor="#b89733"
+          />
+        }
+      >
+        {/* ── Client Name Hero ── */}
+        <View style={styles.heroSection}>
+          <Text style={styles.heroWelcome}>Welcome Back,</Text>
+          <Text style={styles.heroName}>{displayName.toUpperCase()}</Text>
+          <View style={styles.heroDivider} />
+          <Text style={styles.heroEmail}>{clientEmail}</Text>
+        </View>
+
+        {/* ── Compliance Card ── */}
+        <View style={styles.statusCard}>
+          <View style={styles.statusCardHeader}>
+            <Text style={styles.statusCardTitle}>Compliance Status</Text>
+            <Text style={styles.statusCardLive}>● LIVE</Text>
+          </View>
+
+          {loadingCompliance ? (
+            <ActivityIndicator color="#b89733" size="small" style={{ marginTop: 6 }} />
+          ) : compliance ? (
+            <>
+              <View style={styles.statusRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.statusLabel}>VAT Returns Filing</Text>
+                  <Text style={styles.statusDue}>Due: {compliance.vat_due}</Text>
+                </View>
+                <View style={[styles.statusBadge, { borderColor: statusColor(compliance.vat_status) }]}>
+                  <Text style={[styles.statusBadgeText, { color: statusColor(compliance.vat_status) }]}>
+                    ● {compliance.vat_status}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.statusRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.statusLabel}>Corporate Tax Filing</Text>
+                  <Text style={styles.statusDue}>Due: {compliance.ct_due}</Text>
+                </View>
+                <View style={[styles.statusBadge, { borderColor: statusColor(compliance.ct_status) }]}>
+                  <Text style={[styles.statusBadgeText, { color: statusColor(compliance.ct_status) }]}>
+                    ● {compliance.ct_status}
+                  </Text>
+                </View>
+              </View>
+            </>
+          ) : null}
+        </View>
+
+        {/* ── Action Grid ── */}
+        <View style={styles.menuGrid}>
+          <TouchableOpacity
+            style={[styles.menuItem, { backgroundColor: "#132a50ee" }]}
+            onPress={uploadDocument}
+            disabled={uploading}
+          >
+            <Text style={styles.menuIcon}>📁</Text>
+            <Text style={[styles.menuText, { color: "#fff" }]}>
+              {uploading ? "Uploading..." : "Upload Documents"}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.menuItem, { backgroundColor: "#b89733" }]}
+            onPress={() => openWhatsApp("reports")}
+          >
+            <Text style={styles.menuIcon}>📊</Text>
+            <Text style={[styles.menuText, { color: "#fff" }]}>Request Reports</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Documents from Prime Book ── */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Documents from Prime Book</Text>
+          <Text style={styles.sectionSub}>Sent by your Accounting Team • read only</Text>
+
+          {loadingSharedDocs ? (
+            <ActivityIndicator color="#b89733" style={{ marginTop: 10 }} />
+          ) : sharedDocs.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyBoxIcon}>📭</Text>
+              <Text style={styles.emptyText}>No documents yet.</Text>
+              <Text style={styles.emptySubText}>
+                Your team will upload statements, reports and filings here.
+              </Text>
+            </View>
+          ) : (
+            sharedDocs.map((doc, i) => (
+              <TouchableOpacity
+                key={i}
+                style={styles.documentRow}
+                onPress={() => viewDocument(doc.name, "shared")}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.documentIcon}>📤</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.documentName} numberOfLines={1}>{doc.name}</Text>
+                  <Text style={styles.documentDate}>
+                    {formatDate(doc.created_at)} • {formatBytes(doc.metadata?.size)}
+                  </Text>
+                </View>
+                <Text style={styles.viewBtnText}>SHOW</Text>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
+        {/* Divider */}
+        <View style={styles.sectionDivider} />
+
+        {/* ── My Submissions ── */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>My Uploaded Submissions</Text>
+              <Text style={styles.sectionSub}>
+                {myDocs.length} file{myDocs.length !== 1 ? "s" : ""} uploaded
+              </Text>
+            </View>
+            {myDocs.length > 0 && (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {isSelectMode ? (
+                  <>
+                    <TouchableOpacity onPress={selectAllFiles} style={{ marginRight: 14 }}>
+                      <Text style={styles.selectActionText}>
+                        {selectedFiles.length === myDocs.length ? "Unselect All" : "Select All"}
+                      </Text>
+                    </TouchableOpacity>
+                    {selectedFiles.length > 0 && (
+                      <TouchableOpacity onPress={deleteSelected}>
+                        <Text style={styles.deleteActionText}>
+                          Delete ({selectedFiles.length})
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                ) : (
+                  <TouchableOpacity onPress={() => setIsSelectMode(true)}>
+                    <Text style={styles.selectActionText}>Select</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+
+          {loadingMyDocs ? (
+            <ActivityIndicator color="#b89733" style={{ marginTop: 10 }} />
+          ) : myDocs.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyBoxIcon}>📂</Text>
+              <Text style={styles.emptyText}>No documents uploaded yet.</Text>
+              <Text style={styles.emptySubText}>
+                Tap "Upload Documents" above to send files to your Prime Book team.
+              </Text>
+            </View>
+          ) : (
+            <>
+              {myDocs.map((doc, i) => {
+                const isSelected = selectedFiles.includes(doc.name);
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    style={[styles.documentRow, isSelected && styles.documentRowSelected]}
+                    onPress={() =>
+                      isSelectMode ? toggleSelect(doc.name) : viewDocument(doc.name, "uploads")
+                    }
+                    onLongPress={() => {
+                      if (!isSelectMode) {
+                        setIsSelectMode(true);
+                        toggleSelect(doc.name);
+                      }
+                    }}
+                    activeOpacity={0.75}
+                  >
+                    <Text style={styles.documentIcon}>
+                      {isSelectMode ? (isSelected ? "✅" : "⭕") : "📄"}
+                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.documentName} numberOfLines={1}>{doc.name}</Text>
+                      <Text style={styles.documentDate}>
+                        {formatDate(doc.created_at)} • {formatBytes(doc.metadata?.size)}
+                      </Text>
+                    </View>
+                    {!isSelectMode && (
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <TouchableOpacity
+                          onPress={() => viewDocument(doc.name, "uploads")}
+                          style={{ marginRight: 14 }}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Text style={styles.viewBtnText}>VIEW</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => deleteDocument(doc.name)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Text style={styles.deleteBtnText}>DEL</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+              {isSelectMode && (
+                <TouchableOpacity
+                  onPress={() => { setIsSelectMode(false); setSelectedFiles([]); }}
+                  style={{ marginTop: 8 }}
+                >
+                  <Text style={{ textAlign: "center", color: "#888", fontSize: 13 }}>
+                    Cancel Selection
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
+
+        {/* ── Connect Advisor ── */}
+        <TouchableOpacity
+          style={styles.supportButton}
+          onPress={() => openWhatsApp("general")}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.supportButtonText}>💬  Connect with Advisor</Text>
+        </TouchableOpacity>
+
+        {/* ── Privacy Bar ── */}
+        <View style={styles.privacyBar}>
+          <Text style={styles.privacyBarText}>
+            🔒  Your portal is encrypted and secured. Data is never shared with third parties.
+          </Text>
+        </View>
+
+        {/* ── Footer ── */}
+        <View style={styles.footerContainer}>
+          <Text style={styles.footerLock}>Prime Book Accounting & Bookkeeping</Text>
+          <Text style={styles.footerSub}>Dubai, UAE 🇦🇪 • {new Date().getFullYear()}</Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── ROOT APP ────────────────────────────────────────────────
+export default function App() {
+  const [fontsLoaded] = useFonts({ PrimeBoldSerif: Cinzel_700Bold });
+
+  useEffect(() => {
+    async function hideSplash() {
+      if (fontsLoaded) await SplashScreen.hideAsync();
+    }
+    hideSplash();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
+  return (
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} tokenCache={tokenCache}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        <SignedIn>
+          <Dashboard />
+        </SignedIn>
+        <SignedOut>
+          <AuthScreen />
+        </SignedOut>
+      </SafeAreaView>
+    </ClerkProvider>
+  );
+}
+
+// ─── STYLES ─────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#fff" },
+
+  // Auth
+  authContainer: { flex: 1, padding: 24, paddingBottom: 40, backgroundColor: "#fff" },
+  logoBlock: { marginTop: 150, marginBottom: 24 },
+  logoTitle: { fontSize: 30, fontFamily: "PrimeBoldSerif", color: "#b89733", letterSpacing: 2 },
+  logoSub: { fontFamily: "PrimeBoldSerif", fontSize: 12, color: "#1a2b48", letterSpacing: 1.5, marginTop: 2 },
+  nanosubtitle: { fontSize: 9, color: "#b89733", fontWeight: "900", letterSpacing: .5, marginTop: 4 },
+  authTabRow: {
+    flexDirection: "row", borderWidth: 1, borderColor: "#eee",
+    borderRadius: 12, marginBottom: 20, overflow: "hidden",
+  },
+  authTab: { flex: 1, paddingVertical: 12, alignItems: "center", backgroundColor: "#f8f9fa" },
+  authTabActive: { backgroundColor: "#1a2b48" },
+  authTabText: { fontSize: 13, fontWeight: "700", color: "#999" },
+  authTabTextActive: { color: "#b89733" },
+
+  // Form card
+  formCard: {
+    backgroundColor: "#f8f9fa", borderRadius: 16,
+    padding: 20, borderWidth: 1, borderColor: "#eee", marginBottom: 8,
+  },
+  formCardTitle: { fontSize: 18, fontFamily: "PrimeBoldSerif", color: "#1a2b48", marginBottom: 6 },
+  formCardSub: { fontSize: 12, color: "#999", marginBottom: 18, lineHeight: 18 },
+  codeEmailDisplay: { fontSize: 13, fontWeight: "700", color: "#b89733", marginBottom: 16, marginTop: -10 },
+  codeInput: { fontSize: 22, letterSpacing: 8, textAlign: "center", fontWeight: "700", color: "#1a2b48" },
+  nameRow: { flexDirection: "row" },
+  backLink: { marginTop: 14, alignItems: "center" },
+  backLinkText: { color: "#888", fontSize: 13 },
+
+  // Privacy notice (sign up)
+  privacyNotice: {
+    backgroundColor: "#f0f8f0", borderRadius: 10,
+    padding: 12, marginBottom: 16, borderWidth: 1, borderColor: "#d4edda",
+  },
+  privacyNoticeText: { fontSize: 11, color: "#2d6a4f", lineHeight: 16 },
+
+  // Form elements
+  label: { color: "#1a2b48", fontWeight: "700", marginBottom: 6, fontSize: 12 },
+  input: {
+    borderWidth: 1, borderColor: "#e0e0e0", padding: 14, borderRadius: 10,
+    marginBottom: 14, backgroundColor: "#fff", color: "#122445", fontSize: 14,
+  },
+  button: {
+    backgroundColor: "#1a2b48", padding: 16, borderRadius: 10,
+    alignItems: "center", justifyContent: "center", minHeight: 50,
+  },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
+
+  // Footer (auth)
+  footerContainer: { alignItems: "center", marginTop: 24, paddingBottom: 10 },
+  footerLock: { color: "#1a2b48", fontSize: 12, fontWeight: "700" },
+  footerSub: { color: "#c19e14", fontSize: 11, marginTop: 4, letterSpacing: 0.3 },
+  footerPrivacy: { color: "#aaa", fontSize: 10, marginTop: 8, textAlign: "center", lineHeight: 14, paddingHorizontal: 10 },
+
+  // Top bar
+  topBar: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 20, paddingVertical: 12,
+    paddingTop: (StatusBar.currentHeight || 44) + 12,
+    borderBottomWidth: 1, borderBottomColor: "#f0f0f0", backgroundColor: "#fff",
+  },
+  topBarTitle: { fontFamily: "PrimeBoldSerif", fontSize: 18, color: "#b89733", letterSpacing: 1.5 },
+  topBarSub: { fontSize: 10, color: "#999", marginTop: 1 },
+  topBarAvatar: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: "#1a2b48", alignItems: "center", justifyContent: "center",
+  },
+  topBarAvatarText: { color: "#b89733", fontWeight: "bold", fontSize: 13, fontFamily: "PrimeBoldSerif" },
+  logoutText: { color: "#e74c3c", fontSize: 11, fontWeight: "600" },
+
+  // Hero name section
+  heroSection: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 10 },
+  heroWelcome: { fontSize: 12, color: "#999", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 4 },
+  heroName: { fontSize: 26, fontFamily: "PrimeBoldSerif", color: "#1a2b48", letterSpacing: 2, lineHeight: 34 },
+  heroDivider: { width: 42, height: 3, backgroundColor: "#b89733", borderRadius: 2, marginTop: 8, marginBottom: 8 },
+  heroEmail: { fontSize: 12, color: "#aaa", letterSpacing: 0.3 },
+
+  // Compliance card
+  statusCard: {
+    backgroundColor: "#1a2b48", marginHorizontal: 20, marginTop: 16,
+    borderRadius: 16, padding: 20, marginBottom: 16,
+    elevation: 6, shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 6,
+  },
+  statusCardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  statusCardTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  statusCardLive: { color: "#2ecc71", fontSize: 10, fontWeight: "700" },
+  statusRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  statusLabel: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  statusDue: { color: "rgba(255,255,255,0.55)", fontSize: 11, marginTop: 2 },
+  statusBadge: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  statusBadgeText: { fontWeight: "700", fontSize: 12 },
+  divider: { height: 1, backgroundColor: "rgba(255,255,255,0.1)", marginVertical: 14 },
+
+  // Menu grid
+  menuGrid: { flexDirection: "row", marginHorizontal: 20, marginBottom: 20, gap: 10 },
+  menuItem: { flex: 1, paddingVertical: 22, borderRadius: 14, alignItems: "center" },
+  menuIcon: { fontSize: 26, marginBottom: 8 },
+  menuText: { fontWeight: "700", fontSize: 12, textAlign: "center" },
+
+  // Sections
+  sectionContainer: { marginHorizontal: 20, marginBottom: 4 },
+  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 },
+  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#1a2b48" },
+  sectionSub: { fontSize: 11, color: "#999", marginBottom: 10 },
+  sectionDivider: { height: 1, backgroundColor: "#f0f0f0", marginHorizontal: 20, marginVertical: 16 },
+
+  // Empty states
+  emptyBox: {
+    alignItems: "center", paddingVertical: 24,
+    backgroundColor: "#f8f9fa", borderRadius: 12,
+    borderWidth: 1, borderColor: "#eee", marginBottom: 8,
+  },
+  emptyBoxIcon: { fontSize: 32, marginBottom: 8 },
+  emptyText: { color: "#aaa", fontSize: 14, fontWeight: "600" },
+  emptySubText: { color: "#ccc", fontSize: 12, marginTop: 4, textAlign: "center", paddingHorizontal: 20 },
+
+  // Document rows
+  documentRow: {
+    flexDirection: "row", alignItems: "center", backgroundColor: "#fff",
+    padding: 14, borderRadius: 12, marginBottom: 8,
+    borderWidth: 1, borderColor: "#eee",
+    elevation: 1, shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 2,
+  },
+  documentRowSelected: { borderColor: "#b89733", backgroundColor: "#fffdf5" },
+  documentIcon: { fontSize: 22, marginRight: 12 },
+  documentName: { fontSize: 13, fontWeight: "600", color: "#1a2b48" },
+  documentDate: { fontSize: 11, color: "#999", marginTop: 2 },
+  viewBtnText: { color: "#1a2b48", fontSize: 11, fontWeight: "700" },
+  deleteBtnText: { color: "#e74c3c", fontSize: 11, fontWeight: "700" },
+  selectActionText: { color: "#b89733", fontWeight: "700", fontSize: 12 },
+  deleteActionText: { color: "#e74c3c", fontWeight: "700", fontSize: 12 },
+
+  // Support
+  supportButton: {
+    backgroundColor: "#25D366", marginHorizontal: 20, marginTop: 24,
+    padding: 16, borderRadius: 12, alignItems: "center",
+  },
+  supportButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+
+  // Privacy bar
+  privacyBar: {
+    marginHorizontal: 20, marginTop: 16, padding: 12,
+    backgroundColor: "#f8f9fa", borderRadius: 10, borderWidth: 1, borderColor: "#eee",
+  },
+  privacyBarText: { fontSize: 11, color: "#999", textAlign: "center", lineHeight: 16 },
 });
