@@ -73,12 +73,34 @@ if (contactForm) {
 async function syncUserToSupabase() {
   if (!window.Clerk || !window.Clerk.user) return;
   var user = window.Clerk.user;
-  await sb.from('leads').upsert({
-    id: user.id,
-    email_address: user.primaryEmailAddress.emailAddress,
-    full_name: ((user.firstName || '') + ' ' + (user.lastName || '')).trim(),
-    last_seen: new Date().toISOString()
-  }, { onConflict: 'id' });
+  var email = user.primaryEmailAddress.emailAddress;
+  var fullName = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
+
+  try {
+    // Check if client already exists
+    var { data: existing } = await sb
+      .from('leads')
+      .select('id')
+      .eq('email_address', email)
+      .single();
+
+    if (!existing) {
+      // New client — INSERT to trigger SQL function
+      await sb.from('leads').insert({
+        email_address: email,
+        full_name: fullName,
+        last_seen: new Date().toISOString()
+      });
+    } else {
+      // Existing — just update last seen
+      await sb.from('leads').update({
+        full_name: fullName,
+        last_seen: new Date().toISOString()
+      }).eq('email_address', email);
+    }
+  } catch (err) {
+    console.error('Sync error:', err);
+  }
 }
 
 // ─── STATE ───────────────────────────────────────────────────
