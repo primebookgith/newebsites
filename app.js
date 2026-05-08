@@ -77,27 +77,13 @@ async function syncUserToSupabase() {
   var fullName = ((user.firstName || '') + ' ' + (user.lastName || '')).trim();
 
   try {
-    // Check if client already exists
-    var { data: existing } = await sb
-      .from('leads')
-      .select('id')
-      .eq('email_address', email)
-      .single();
+    var { error } = await sb.from('leads').upsert({
+      email_address: email,
+      full_name: fullName,
+      last_seen: new Date().toISOString()
+    }, { onConflict: 'email_address' });
 
-    if (!existing) {
-      // New client — INSERT to trigger SQL function
-      await sb.from('leads').insert({
-        email_address: email,
-        full_name: fullName,
-        last_seen: new Date().toISOString()
-      });
-    } else {
-      // Existing — just update last seen
-      await sb.from('leads').update({
-        full_name: fullName,
-        last_seen: new Date().toISOString()
-      }).eq('email_address', email);
-    }
+    if (error) console.error('Sync error:', error);
   } catch (err) {
     console.error('Sync error:', err);
   }
