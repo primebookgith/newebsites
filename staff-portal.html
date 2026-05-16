@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prime Book — Staff Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #b89733;
+      --navy: #1a2b48;
+      --red: #e74c3c;
+      --green: #2ecc71;
+      --yellow: #f1c40f;
+      --bg: #f5f6fa;
+      --white: #ffffff;
+      --border: #eef0f5;
+      --text: #1a2b48;
+      --sub: #8892a4;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── AUTH ── */
+    #auth-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #0d1b35 0%, #1a2b48 60%, #243a5e 100%);
+      padding: 24px;
+    }
+    .auth-card {
+      background: #fff; border-radius: 20px; padding: 40px 36px;
+      max-width: 420px; width: 100%;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    }
+    .auth-logo { font-family: 'Cinzel', serif; font-size: 28px; color: var(--gold); letter-spacing: 3px; margin-bottom: 4px; }
+    .auth-sub { font-size: 11px; color: var(--navy); letter-spacing: 2px; font-weight: 600; margin-bottom: 4px; }
+    .auth-badge { font-size: 9px; color: var(--red); font-weight: 900; letter-spacing: 0.5px; margin-bottom: 28px; }
+    .auth-title { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+    .auth-desc { font-size: 12px; color: var(--sub); margin-bottom: 20px; line-height: 1.5; }
+    .auth-label { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 6px; display: block; }
+    .auth-input {
+      width: 100%; border: 1px solid #e0e0e0; border-radius: 10px;
+      padding: 14px; font-size: 14px; color: var(--navy); margin-bottom: 14px;
+      outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;
+    }
+    .auth-input:focus { border-color: var(--gold); }
+    .auth-btn {
+      width: 100%; background: var(--navy); color: #fff; border: none;
+      border-radius: 10px; padding: 16px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s; font-family: 'Inter', sans-serif;
+    }
+    .auth-btn:hover { opacity: 0.88; }
+    .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .auth-btn.gold { background: var(--gold); }
+    .auth-back { text-align: center; margin-top: 14px; color: var(--sub); font-size: 13px; cursor: pointer; }
+    .auth-back:hover { text-decoration: underline; }
+    .auth-code-email { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 16px; margin-top: -10px; }
+    .auth-code-input { font-size: 24px; letter-spacing: 10px; text-align: center; font-weight: 700; }
+
+    /* ── LAYOUT ── */
+    #staff-app { display: none; min-height: 100vh; }
+    #topbar {
+      background: #fff; border-bottom: 1px solid var(--border);
+      padding: 0 28px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+    }
+    .topbar-brand { display: flex; flex-direction: column; }
+    .topbar-brand-title { font-family: 'Cinzel', serif; font-size: 18px; color: var(--gold); letter-spacing: 2px; }
+    .topbar-brand-sub { font-size: 10px; color: var(--sub); }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--navy); display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold); font-weight: 700; }
+    .topbar-email { font-size: 12px; color: var(--sub); }
+    .topbar-logout { color: var(--red); font-size: 12px; font-weight: 600; background: none; border: none; cursor: pointer; }
+    .topbar-logout:hover { text-decoration: underline; }
+
+    #main-layout { display: flex; min-height: calc(100vh - 60px); }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 220px; background: #fff; border-right: 1px solid var(--border);
+      padding: 20px 0; flex-shrink: 0; position: sticky; top: 60px;
+      height: calc(100vh - 60px); overflow-y: auto;
+    }
+    .sidebar-section { padding: 0 12px; margin-bottom: 4px; }
+    .sidebar-label { font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 1px; padding: 8px 12px 4px; }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: var(--sub);
+      transition: all 0.15s; margin-bottom: 2px;
+    }
+    .sidebar-item:hover { background: #f5f6fa; color: var(--navy); }
+    .sidebar-item.active { background: #eef2ff; color: var(--navy); }
+    .sidebar-item.active .sidebar-icon { opacity: 1; }
+    .sidebar-icon { font-size: 16px; opacity: 0.7; }
+    .sidebar-badge { background: var(--red); color: #fff; border-radius: 8px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; padding: 0 5px; margin-left: auto; }
+
+    /* ── CONTENT ── */
+    #content { flex: 1; padding: 28px; overflow-y: auto; }
+    .content-panel { display: none; }
+    .content-panel.active { display: block; }
+    .panel-title { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+    .panel-sub { font-size: 12px; color: var(--sub); margin-bottom: 24px; }
+
+    /* ── CARDS ── */
+    .card { background: #fff; border-radius: 16px; border: 1px solid var(--border); padding: 24px; margin-bottom: 20px; }
+    .card-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 16px; }
+
+    /* ── CLIENT PICKER ── */
+    .client-picker {
+      background: #f0f4ff; border: 1px solid #d0d8ee; border-radius: 10px;
+      padding: 14px; cursor: pointer; font-size: 14px; font-weight: 700;
+      color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+      transition: border-color 0.15s;
+    }
+    .client-picker:hover { border-color: var(--gold); }
+    .client-search-wrap { position: relative; margin-bottom: 8px; }
+    .client-search { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none; font-family: 'Inter', sans-serif; }
+    .client-search:focus { border-color: var(--gold); }
+    .client-list { background: #fff; border: 1px solid var(--border); border-radius: 12px; max-height: 240px; overflow-y: auto; display: none; }
+    .client-list.open { display: block; }
+    .client-row { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background 0.12s; display: flex; align-items: center; justify-content: space-between; }
+    .client-row:last-child { border-bottom: none; }
+    .client-row:hover { background: #f5f6fa; }
+    .client-row-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .client-row-email { font-size: 11px; color: var(--sub); margin-top: 2px; }
+    .client-unread-dot { background: var(--red); color: #fff; border-radius: 8px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; padding: 0 5px; }
+
+    /* ── COMPLIANCE ── */
+    .compliance-field-label { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 8px; margin-top: 4px; }
+    .status-btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .status-btn {
+      border: 1px solid #ddd; border-radius: 8px; padding: 7px 14px;
+      font-size: 11px; font-weight: 700; color: #555; cursor: pointer;
+      background: #f8f9fa; transition: all 0.15s; font-family: 'Inter', sans-serif;
+    }
+    .status-btn.active { color: #fff; }
+    .form-input {
+      width: 100%; border: 1px solid #e0e0e0; border-radius: 10px;
+      padding: 12px 14px; font-size: 14px; color: var(--navy); margin-bottom: 16px;
+      outline: none; font-family: 'Inter', sans-serif; transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: var(--gold); }
+    .save-btn {
+      width: 100%; background: var(--navy); color: #fff; border: none;
+      border-radius: 10px; padding: 14px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.2s; font-family: 'Inter', sans-serif;
+    }
+    .save-btn:hover { opacity: 0.88; }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── DOCS ── */
+    .upload-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--navy); color: #fff; border: none; border-radius: 10px;
+      padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer;
+      width: 100%; margin-bottom: 16px; transition: opacity 0.2s; font-family: 'Inter', sans-serif;
+    }
+    .upload-btn:hover { opacity: 0.88; }
+    .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .doc-row {
+      display: flex; align-items: center; background: #fff;
+      padding: 14px; border-radius: 12px; margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+    .doc-icon { font-size: 22px; margin-right: 12px; flex-shrink: 0; }
+    .doc-info { flex: 1; min-width: 0; }
+    .doc-name { font-size: 13px; font-weight: 600; color: var(--navy); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .doc-date { font-size: 11px; color: var(--sub); margin-top: 2px; }
+    .doc-del { background: none; border: none; color: var(--red); font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .doc-view { background: none; border: none; color: var(--navy); font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0; margin-right: 14px; }
+    .empty-box { background: #f8f9fa; border: 1px solid var(--border); border-radius: 12px; padding: 28px; text-align: center; }
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty-text { color: #aaa; font-size: 14px; font-weight: 600; }
+
+    /* ── CHAT ── */
+    .chat-window {
+      height: 360px; background: #f8f9fa; border-radius: 14px;
+      border: 1px solid var(--border); overflow-y: auto; padding: 12px;
+      display: flex; flex-direction: column; gap: 6px; scroll-behavior: smooth;
+    }
+    .chat-window::-webkit-scrollbar { width: 4px; }
+    .chat-window::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+    .chat-date-sep { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+    .chat-date-line { flex: 1; height: 1px; background: #e0e0e0; }
+    .chat-date-text { font-size: 11px; color: #aaa; font-weight: 600; white-space: nowrap; }
+    .chat-bubble-wrap { display: flex; max-width: 80%; }
+    .chat-bubble-wrap.from-employee { align-self: flex-end; flex-direction: row-reverse; }
+    .chat-bubble-wrap.from-client { align-self: flex-start; }
+    .chat-bubble { border-radius: 16px; padding: 10px 14px; }
+    .chat-bubble.employee-bubble { background: var(--navy); border-bottom-right-radius: 4px; }
+    .chat-bubble.client-bubble { background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .chat-sender { font-size: 10px; color: var(--gold); font-weight: 700; margin-bottom: 3px; }
+    .chat-text { font-size: 14px; line-height: 1.45; word-break: break-word; }
+    .chat-text.white { color: #fff; }
+    .chat-text.dark { color: var(--navy); }
+    .chat-meta { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 4px; }
+    .chat-time { font-size: 10px; color: #bbb; }
+    .chat-time.white { color: rgba(255,255,255,0.6); }
+    .chat-tick { font-size: 11px; color: var(--gold); font-weight: 700; }
+    .chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #aaa; gap: 8px; }
+    .chat-empty-icon { font-size: 36px; }
+    .chat-empty-text { font-size: 14px; font-weight: 600; }
+    .chat-templates { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 4px; scrollbar-width: none; }
+    .chat-templates::-webkit-scrollbar { display: none; }
+    .chat-chip { background: #f0f4ff; border: 1px solid #dce5ff; border-radius: 20px; padding: 5px 12px; font-size: 11px; color: var(--navy); font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
+    .chat-chip:hover { background: #dce5ff; }
+    .chat-input-row { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
+    .chat-input {
+      flex: 1; border: 1px solid #e0e0e0; border-radius: 22px;
+      padding: 10px 16px; font-size: 14px; color: var(--navy);
+      background: #fff; resize: none; max-height: 100px; min-height: 44px;
+      font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s;
+    }
+    .chat-input:focus { border-color: var(--gold); }
+    .chat-send {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--navy); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--gold); flex-shrink: 0; transition: opacity 0.15s;
+    }
+    .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+    .chat-send:not(:disabled):hover { opacity: 0.85; }
+
+    /* ── BULK DOCS ── */
+    .bulk-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .bulk-btn { flex: 1; padding: 11px; border: none; border-radius: 10px; font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; font-family: 'Inter', sans-serif; }
+    .bulk-btn:hover { opacity: 0.88; }
+
+    /* ── TOAST ── */
+    #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--navy); color: #fff; padding: 12px 24px; border-radius: 12px; font-size: 13px; font-weight: 600; z-index: 9999; transition: transform 0.3s; pointer-events: none; white-space: nowrap; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ── LOADING ── */
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      #sidebar { display: none; }
+      #content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">PRIME BOOK</div>
+    <div class="auth-sub">Employee Portal</div>
+    <div class="auth-badge">STAFF ACCESS ONLY</div>
+    <div id="auth-step-email">
+      <div class="auth-title">Staff Sign In</div>
+      <div class="auth-desc">Enter your Prime Book staff email to receive a secure access code.</div>
+      <label class="auth-label">Staff Email</label>
+      <input type="email" id="auth-email" class="auth-input" placeholder="staff@primebookuae.com" autocomplete="email">
+      <button class="auth-btn" id="auth-send-btn" onclick="sendCode()">Get Access Code</button>
+    </div>
+    <div id="auth-step-code" style="display:none">
+      <div class="auth-title">Enter Your Code</div>
+      <div class="auth-desc">A 6-digit code was sent to</div>
+      <div class="auth-code-email" id="auth-code-email-display"></div>
+      <label class="auth-label">Verification Code</label>
+      <input type="text" id="auth-code" class="auth-input auth-code-input" placeholder="• • • • • •" maxlength="6" inputmode="numeric">
+      <button class="auth-btn gold" id="auth-verify-btn" onclick="verifyCode()">Access Portal</button>
+      <div class="auth-back" onclick="backToEmail()">← Use a different email</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STAFF APP ── -->
+<div id="staff-app">
+  <div id="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-brand-title">PRIME BOOK</div>
+      <div class="topbar-brand-sub">Staff Portal</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-email" id="topbar-email"></div>
+      <div class="topbar-avatar" id="topbar-avatar">S</div>
+      <button class="topbar-logout" onclick="handleLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div id="main-layout">
+    <div id="sidebar">
+      <div class="sidebar-label">Tools</div>
+      <div class="sidebar-item active" onclick="switchTab('compliance')" id="tab-compliance">
+        <span class="sidebar-icon">📋</span> Compliance
+      </div>
+      <div class="sidebar-item" onclick="switchTab('docs')" id="tab-docs">
+        <span class="sidebar-icon">📁</span> Send Docs
+      </div>
+      <div class="sidebar-item" onclick="switchTab('chat')" id="tab-chat">
+        <span class="sidebar-icon">💬</span> Messages
+        <span class="sidebar-badge" id="sidebar-unread-badge" style="display:none"></span>
+      </div>
+      <div class="sidebar-item" onclick="switchTab('uploads')" id="tab-uploads">
+        <span class="sidebar-icon">📂</span> Client Uploads
+      </div>
+    </div>
+
+    <div id="content">
+
+      <!-- ── COMPLIANCE PANEL ── -->
+      <div class="content-panel active" id="panel-compliance">
+        <div class="panel-title">Update Client Compliance</div>
+        <div class="panel-sub">Select a client then edit VAT & Corporate Tax status</div>
+        <div class="card">
+          <div id="comp-client-picker" class="client-picker" onclick="openClientDropdown('comp')">
+            🔍 Select Client…
+          </div>
+          <div class="client-search-wrap" id="comp-search-wrap" style="display:none">
+            <input type="text" class="client-search" id="comp-search" placeholder="Search by name or email…" oninput="filterClients('comp')">
+            <div class="client-list open" id="comp-client-list"></div>
+          </div>
+          <div id="comp-form" style="display:none">
+            <div class="compliance-field-label">VAT Return Status</div>
+            <div class="status-btn-row" id="comp-vat-status-row"></div>
+            <div class="compliance-field-label">VAT Due Date</div>
+            <input type="text" class="form-input" id="comp-vat-due" placeholder="e.g. May 28, 2026">
+            <div class="compliance-field-label">Corporate Tax Status</div>
+            <div class="status-btn-row" id="comp-ct-status-row"></div>
+            <div class="compliance-field-label">Corporate Tax Due Date</div>
+            <input type="text" class="form-input" id="comp-ct-due" placeholder="e.g. September 30, 2026">
+            <button class="save-btn" id="comp-save-btn" onclick="saveCompliance()">Save and Notify Client</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SEND DOCS PANEL ── -->
+      <div class="content-panel" id="panel-docs">
+        <div class="panel-title">Share Documents with Client</div>
+        <div class="panel-sub">Upload files directly to client's portal</div>
+        <div class="card">
+          <div id="docs-client-picker" class="client-picker" onclick="openClientDropdown('docs')">
+            🔍 Select Client…
+          </div>
+          <div class="client-search-wrap" id="docs-search-wrap" style="display:none">
+            <input type="text" class="client-search" id="docs-search" placeholder="Search by name or email…" oninput="filterClients('docs')">
+            <div class="client-list open" id="docs-client-list"></div>
+          </div>
+          <div id="docs-form" style="display:none">
+            <input type="file" id="docs-file-input" multiple style="display:none" onchange="handleDocsUpload(this.files)">
+            <button class="upload-btn" id="docs-upload-btn" onclick="document.getElementById('docs-file-input').click()">
+              📁 Upload & Share with Client
+            </button>
+            <div id="docs-list"><div class="empty-box"><div class="empty-icon">📭</div><div class="empty-text">No documents shared yet.</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CHAT PANEL ── -->
+      <div class="content-panel" id="panel-chat">
+        <div class="panel-title">Client Chat</div>
+        <div class="panel-sub">Real-time messaging with clients</div>
+        <div class="card">
+          <div id="chat-client-picker" class="client-picker" onclick="openClientDropdown('chat')">
+            🔍 Select Client to Chat…
+          </div>
+          <div class="client-search-wrap" id="chat-search-wrap" style="display:none">
+            <input type="text" class="client-search" id="chat-search" placeholder="Search by name or email…" oninput="filterClients('chat')">
+            <div class="client-list open" id="chat-client-list"></div>
+          </div>
+          <div id="chat-form" style="display:none">
+            <div class="chat-window" id="chat-window">
+              <div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">No messages yet.</div></div>
+            </div>
+            <div class="chat-templates" id="chat-templates">
+              <div class="chat-chip" data-msg="Please upload your latest bank statements.">Please upload your latest bank statements.</div>
+              <div class="chat-chip" data-msg="Your VAT filing has been submitted ✓">Your VAT filing has been submitted ✓</div>
+              <div class="chat-chip" data-msg="We need your trade license renewal document.">We need your trade license renewal document.</div>
+              <div class="chat-chip" data-msg="Your Corporate Tax return is ready for review.">Your Corporate Tax return is ready for review.</div>
+              <div class="chat-chip" data-msg="Please review and sign the attached document.">Please review and sign the attached document.</div>
+              <div class="chat-chip" data-msg="Kindly provide your latest invoices.">Kindly provide your latest invoices.</div>
+            </div>
+            <div class="chat-input-row">
+              <textarea class="chat-input" id="chat-input" placeholder="Type a message…" rows="1" maxlength="500"></textarea>
+              <button class="chat-send" id="chat-send-btn" disabled onclick="sendStaffMessage()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CLIENT UPLOADS PANEL ── -->
+      <div class="content-panel" id="panel-uploads">
+        <div class="panel-title">Client Uploads</div>
+        <div class="panel-sub">Files submitted by clients</div>
+        <div class="card">
+          <div id="uploads-client-picker" class="client-picker" onclick="openClientDropdown('uploads')">
+            🔍 Select Client…
+          </div>
+          <div class="client-search-wrap" id="uploads-search-wrap" style="display:none">
+            <input type="text" class="client-search" id="uploads-search" placeholder="Search by name or email…" oninput="filterClients('uploads')">
+            <div class="client-list open" id="uploads-client-list"></div>
+          </div>
+          <div id="uploads-form" style="display:none">
+            <div id="uploads-bulk-row" class="bulk-row" style="display:none">
+              <button class="bulk-btn" style="background:var(--navy)" id="uploads-download-all-btn">⬇ Download All</button>
+              <button class="bulk-btn" style="background:var(--red)" id="uploads-delete-all-btn">🗑 Delete All</button>
+            </div>
+            <div id="uploads-list"><div class="empty-box"><div class="empty-icon">📂</div><div class="empty-text">No uploads from this client.</div></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────
+var SUPABASE_URL = 'https://plcdgqwrwwitkmbsghkh.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_vGe6NG1vU4HLHjhPpm7LYQ_G-TXWMXf';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var COMPLIANCE_STATUSES = ['PENDING', 'FILED', 'OVERDUE', 'DONE', 'N/A'];
+
+// ─── STATE ───────────────────────────────────────────────────
+var _employeeEmail = '';
+var _allClients = [];
+var _unreadMap = {};
+var _totalUnread = 0;
+var _globalUnreadChannel = null;
+
+// Per-panel selected client
+var _selected = { comp: null, docs: null, chat: null, uploads: null };
+var _complianceData = null;
+var _sharedDocs = [];
+var _clientUploadDocs = [];
+var _chatMessages = [];
+var _chatChannel = null;
+var _chatPoll = null;
+var _activeTab = 'compliance';
+
+// ─── HELPERS ─────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function formatBytes(bytes) {
+  if (!bytes) return '—';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1048576).toFixed(1) + ' MB';
+}
+function formatDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function formatTime(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+function formatDateGroup(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function statusColor(s) {
+  if (!s) return '#999';
+  if (s === 'FILED' || s === 'DONE') return '#2ecc71';
+  if (s === 'PENDING') return '#f1c40f';
+  if (s === 'OVERDUE') return '#e74c3c';
+  if (s === 'N/A') return '#aaa';
+  return '#999';
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+function getNextVatDue() {
+  var now = new Date();
+  var due = new Date(now.getFullYear(), now.getMonth() + 1, 28);
+  return due.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+}
+function getNextCtDue() {
+  var now = new Date();
+  var ctThisYear = new Date(now.getFullYear(), 8, 30);
+  var due = now > ctThisYear ? new Date(now.getFullYear() + 1, 8, 30) : ctThisYear;
+  return due.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────
+var _signInAttemptId = null;
+
+async function sendCode() {
+  var email = document.getElementById('auth-email').value.trim().toLowerCase();
+  if (!email) { alert('Please enter your staff email.'); return; }
+  var btn = document.getElementById('auth-send-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    var res = await sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+    if (res.error) throw res.error;
+    document.getElementById('auth-step-email').style.display = 'none';
+    document.getElementById('auth-step-code').style.display = 'block';
+    document.getElementById('auth-code-email-display').textContent = email;
+    document.getElementById('auth-code').value = '';
+    document.getElementById('auth-code').focus();
+    _signInAttemptId = email;
+  } catch(err) {
+    alert('Error: ' + (err.message || 'Could not send code.'));
+    btn.disabled = false; btn.textContent = 'Get Access Code';
+  }
+}
+
+async function verifyCode() {
+  var code = document.getElementById('auth-code').value.trim();
+  var email = _signInAttemptId;
+  if (!code) { alert('Please enter the verification code.'); return; }
+  var btn = document.getElementById('auth-verify-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  try {
+    var res = await sb.auth.verifyOtp({ email: email, token: code, type: 'email' });
+    if (res.error) throw res.error;
+    _employeeEmail = email;
+    initStaffApp();
+  } catch(err) {
+    alert('Verification failed: ' + (err.message || 'Invalid or expired code.'));
+    btn.disabled = false; btn.textContent = 'Access Portal';
+  }
+}
+
+function backToEmail() {
+  document.getElementById('auth-step-code').style.display = 'none';
+  document.getElementById('auth-step-email').style.display = 'block';
+  var btn = document.getElementById('auth-send-btn');
+  btn.disabled = false; btn.textContent = 'Get Access Code';
+}
+
+async function handleLogout() {
+  if (!confirm('Sign out of the Staff Portal?')) return;
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ─── INIT STAFF APP ──────────────────────────────────────────
+async function initStaffApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('staff-app').style.display = 'block';
+  document.getElementById('topbar-email').textContent = _employeeEmail;
+  document.getElementById('topbar-avatar').textContent = _employeeEmail[0].toUpperCase();
+  await loadAllClients();
+  initGlobalUnreadListener();
+}
+
+// ─── LOAD CLIENTS ────────────────────────────────────────────
+async function loadAllClients() {
+  var res = await sb.from('leads').select('email_address, full_name').order('full_name', { ascending: true });
+  _allClients = res.data || [];
+  // Load unread counts
+  var unreadRes = await sb.from('client_notes').select('client_email').eq('sender_type','client').eq('is_read',false).is('deleted_at',null);
+  _unreadMap = {};
+  (unreadRes.data || []).forEach(function(row) {
+    _unreadMap[row.client_email] = (_unreadMap[row.client_email] || 0) + 1;
+  });
+  updateUnreadBadge();
+}
+
+function updateUnreadBadge() {
+  _totalUnread = Object.values(_unreadMap).reduce(function(a,b){ return a+b; }, 0);
+  var badge = document.getElementById('sidebar-unread-badge');
+  if (badge) {
+    badge.textContent = _totalUnread > 99 ? '99+' : _totalUnread;
+    badge.style.display = _totalUnread > 0 ? 'inline-flex' : 'none';
+  }
+}
+
+function initGlobalUnreadListener() {
+  if (_globalUnreadChannel) sb.removeChannel(_globalUnreadChannel);
+  _globalUnreadChannel = sb.channel('global-unread-staff')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'client_notes' }, function(payload) {
+      if (payload.new.sender_type === 'client' && !payload.new.is_read) {
+        _unreadMap[payload.new.client_email] = (_unreadMap[payload.new.client_email] || 0) + 1;
+        updateUnreadBadge();
+      }
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'client_notes' }, function() {
+      // recount
+      sb.from('client_notes').select('client_email').eq('sender_type','client').eq('is_read',false).is('deleted_at',null).then(function(res) {
+        _unreadMap = {};
+        (res.data || []).forEach(function(row) { _unreadMap[row.client_email] = (_unreadMap[row.client_email] || 0) + 1; });
+        updateUnreadBadge();
+      });
+    })
+    .subscribe();
+}
+
+// ─── TABS ────────────────────────────────────────────────────
+function switchTab(tab) {
+  _activeTab = tab;
+  document.querySelectorAll('.sidebar-item').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.content-panel').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ─── CLIENT DROPDOWN ─────────────────────────────────────────
+var _openDropdown = null;
+
+function openClientDropdown(panel) {
+  // Close others
+  ['comp','docs','chat','uploads'].forEach(function(p) {
+    if (p !== panel) closeClientDropdown(p);
+  });
+  var wrap = document.getElementById(panel + '-search-wrap');
+  var picker = document.getElementById(panel + '-client-picker');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  picker.style.display = 'none';
+  _openDropdown = panel;
+  renderClientList(panel, '');
+  document.getElementById(panel + '-search').focus();
+}
+
+function closeClientDropdown(panel) {
+  var wrap = document.getElementById(panel + '-search-wrap');
+  var picker = document.getElementById(panel + '-client-picker');
+  if (wrap) wrap.style.display = 'none';
+  if (picker) picker.style.display = 'flex';
+}
+
+function filterClients(panel) {
+  var q = document.getElementById(panel + '-search').value;
+  renderClientList(panel, q);
+}
+
+function renderClientList(panel, q) {
+  var list = document.getElementById(panel + '-client-list');
+  if (!list) return;
+  var filtered = _allClients.filter(function(c) {
+    var s = q.toLowerCase();
+    return (c.email_address || '').toLowerCase().includes(s) || (c.full_name || '').toLowerCase().includes(s);
+  });
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="padding:16px;text-align:center;color:#aaa;font-size:13px;">No clients found.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(function(c) {
+    var unread = _unreadMap[c.email_address] || 0;
+    return '<div class="client-row" onclick="selectClient(\'' + panel + '\',\'' + escHtml(c.email_address) + '\',\'' + escHtml(c.full_name || c.email_address) + '\')">' +
+      '<div><div class="client-row-name">' + escHtml(c.full_name || '—') + '</div><div class="client-row-email">' + escHtml(c.email_address) + '</div></div>' +
+      (unread > 0 ? '<span class="client-unread-dot">' + unread + '</span>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function selectClient(panel, email, name) {
+  _selected[panel] = { email: email, name: name };
+  closeClientDropdown(panel);
+  var picker = document.getElementById(panel + '-client-picker');
+  if (picker) picker.textContent = '📋 ' + name;
+  document.getElementById(panel + '-form').style.display = 'block';
+
+  if (panel === 'comp') loadCompliance(email);
+  if (panel === 'docs') loadSharedDocs(email);
+  if (panel === 'chat') initStaffChat(email, name);
+  if (panel === 'uploads') loadClientUploads(email);
+}
+
+// ─── COMPLIANCE ───────────────────────────────────────────────
+async function loadCompliance(email) {
+  var res = await sb.from('client_compliance').select('*').eq('client_email', email).single();
+  _complianceData = res.data || { vat_status: 'PENDING', vat_due: getNextVatDue(), ct_status: 'PENDING', ct_due: getNextCtDue() };
+  renderComplianceForm();
+}
+
+function renderComplianceForm() {
+  var c = _complianceData;
+  renderStatusBtns('comp-vat-status-row', 'vat_status', c.vat_status);
+  renderStatusBtns('comp-ct-status-row', 'ct_status', c.ct_status);
+  document.getElementById('comp-vat-due').value = c.vat_due || '';
+  document.getElementById('comp-ct-due').value = c.ct_due || '';
+  document.getElementById('comp-form').style.display = 'block';
+}
+
+function renderStatusBtns(containerId, field, current) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = COMPLIANCE_STATUSES.map(function(s) {
+    var active = s === current;
+    var bg = active ? statusColor(s) : '#f8f9fa';
+    var border = active ? statusColor(s) : '#ddd';
+    var color = active ? '#fff' : '#555';
+    return '<button class="status-btn' + (active ? ' active' : '') + '" style="background:' + bg + ';border-color:' + border + ';color:' + color + '" onclick="setComplianceField(\'' + field + '\',\'' + s + '\')">' + s + '</button>';
+  }).join('');
+}
+
+function setComplianceField(field, value) {
+  if (!_complianceData) return;
+  _complianceData[field] = value;
+  renderComplianceForm();
+}
+
+async function saveCompliance() {
+  var client = _selected.comp;
+  if (!client || !_complianceData) return;
+  var btn = document.getElementById('comp-save-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  _complianceData.vat_due = document.getElementById('comp-vat-due').value;
+  _complianceData.ct_due = document.getElementById('comp-ct-due').value;
+  var payload = Object.assign({}, _complianceData);
+  delete payload.id;
+  payload.client_email = client.email;
+  payload.updated_by = _employeeEmail;
+  payload.updated_at = new Date().toISOString();
+  var res = await sb.from('client_compliance').upsert(payload, { onConflict: 'client_email' });
+  btn.disabled = false; btn.textContent = 'Save and Notify Client';
+  if (res.error) { showToast('❌ Save failed: ' + res.error.message); }
+  else { showToast('✓ Compliance saved and client notified'); }
+}
+
+// ─── SHARED DOCS ─────────────────────────────────────────────
+async function loadSharedDocs(email) {
+  document.getElementById('docs-list').innerHTML = '<div class="empty-box"><div class="empty-icon">⏳</div><div class="empty-text">Loading…</div></div>';
+  var res = await sb.storage.from('client-documents').list('shared/' + email + '/', { limit:100, sortBy:{column:'created_at',order:'desc'} });
+  _sharedDocs = (res.data || []).filter(function(d) { return d.metadata && d.metadata.size > 0; });
+  renderSharedDocs();
+}
+
+function renderSharedDocs() {
+  var container = document.getElementById('docs-list');
+  if (!container) return;
+  if (_sharedDocs.length === 0) {
+    container.innerHTML = '<div class="empty-box"><div class="empty-icon">📭</div><div class="empty-text">No documents shared yet.</div></div>';
+    return;
+  }
+  container.innerHTML = _sharedDocs.map(function(doc) {
+    return '<div class="doc-row"><span class="doc-icon">📤</span><div class="doc-info"><div class="doc-name">' + escHtml(doc.name) + '</div><div class="doc-date">' + formatDate(doc.created_at) + ' • ' + formatBytes(doc.metadata && doc.metadata.size) + '</div></div><button class="doc-del" onclick="deleteSharedDoc(\'' + escHtml(doc.name) + '\')">DEL</button></div>';
+  }).join('');
+}
+
+async function handleDocsUpload(files) {
+  var client = _selected.docs;
+  if (!client || !files || !files.length) return;
+  var btn = document.getElementById('docs-upload-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Uploading…';
+  var ok = 0, fail = 0;
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    try {
+      var clean = file.name.replace(/\s+/g,'_').replace(/[^\w.-]/g,'_').toLowerCase();
+      var ext = clean.includes('.') ? clean.split('.').pop() : '';
+      var base = ext ? clean.slice(0, -(ext.length+1)) : clean;
+      var path = 'shared/' + client.email + '/' + base + '_' + Date.now() + (ext ? '.' + ext : '');
+      var ab = await file.arrayBuffer();
+      var res = await sb.storage.from('client-documents').upload(path, ab, { contentType: file.type || 'application/octet-stream', upsert: true });
+      if (res.error) throw res.error;
+      ok++;
+    } catch(e) { fail++; }
+  }
+  btn.disabled = false; btn.innerHTML = '📁 Upload & Share with Client';
+  document.getElementById('docs-file-input').value = '';
+  showToast(ok + ' file(s) shared with ' + client.name + (fail ? ', ' + fail + ' failed' : ''));
+  await loadSharedDocs(client.email);
+}
+
+async function deleteSharedDoc(fileName) {
+  var client = _selected.docs;
+  if (!client) return;
+  if (!confirm('Remove "' + fileName + '" from client portal?')) return;
+  var res = await sb.storage.from('client-documents').remove(['shared/' + client.email + '/' + fileName]);
+  if (res.error) showToast('❌ Delete failed');
+  else { showToast('Deleted'); await loadSharedDocs(client.email); }
+}
+
+// ─── CLIENT UPLOADS ──────────────────────────────────────────
+async function loadClientUploads(email) {
+  document.getElementById('uploads-list').innerHTML = '<div class="empty-box"><div class="empty-icon">⏳</div><div class="empty-text">Loading…</div></div>';
+  var res = await sb.storage.from('client-documents').list('uploads/' + email + '/', { limit:100, sortBy:{column:'created_at',order:'desc'} });
+  _clientUploadDocs = (res.data || []).filter(function(d) { return d.metadata && d.metadata.size > 0; });
+  renderClientUploads();
+}
+
+function renderClientUploads() {
+  var container = document.getElementById('uploads-list');
+  var bulkRow = document.getElementById('uploads-bulk-row');
+  if (!container) return;
+  if (bulkRow) bulkRow.style.display = _clientUploadDocs.length > 0 ? 'flex' : 'none';
+  if (_clientUploadDocs.length === 0) {
+    container.innerHTML = '<div class="empty-box"><div class="empty-icon">📂</div><div class="empty-text">No uploads from this client.</div></div>';
+    return;
+  }
+  var client = _selected.uploads;
+  container.innerHTML = _clientUploadDocs.map(function(doc) {
+    return '<div class="doc-row"><span class="doc-icon">📄</span><div class="doc-info"><div class="doc-name">' + escHtml(doc.name) + '</div><div class="doc-date">' + formatDate(doc.created_at) + ' • ' + formatBytes(doc.metadata && doc.metadata.size) + '</div></div><button class="doc-view" onclick="viewClientUpload(\'' + escHtml(doc.name) + '\')">VIEW</button><button class="doc-del" onclick="deleteClientUpload(\'' + escHtml(doc.name) + '\')">DEL</button></div>';
+  }).join('');
+
+  // Wire bulk buttons
+  var dlBtn = document.getElementById('uploads-download-all-btn');
+  var delAllBtn = document.getElementById('uploads-delete-all-btn');
+  if (dlBtn) dlBtn.onclick = function() { downloadAllUploads(); };
+  if (delAllBtn) delAllBtn.onclick = function() { deleteAllUploads(); };
+}
+
+async function viewClientUpload(fileName) {
+  var client = _selected.uploads;
+  if (!client) return;
+  var res = await sb.storage.from('client-documents').createSignedUrl('uploads/' + client.email + '/' + fileName, 300);
+  if (res.error) { showToast('❌ Could not open file'); return; }
+  window.open(res.data.signedUrl, '_blank');
+}
+
+async function deleteClientUpload(fileName) {
+  var client = _selected.uploads;
+  if (!client || !confirm('Delete "' + fileName + '"?')) return;
+  var res = await sb.storage.from('client-documents').remove(['uploads/' + client.email + '/' + fileName]);
+  if (res.error) showToast('❌ Delete failed');
+  else { showToast('Deleted'); await loadClientUploads(client.email); }
+}
+
+async function downloadAllUploads() {
+  var client = _selected.uploads;
+  if (!client || !_clientUploadDocs.length) return;
+  if (!confirm('Open all ' + _clientUploadDocs.length + ' file(s) for download?')) return;
+  for (var i = 0; i < _clientUploadDocs.length; i++) {
+    var res = await sb.storage.from('client-documents').createSignedUrl('uploads/' + client.email + '/' + _clientUploadDocs[i].name, 300);
+    if (!res.error) window.open(res.data.signedUrl, '_blank');
+    await new Promise(function(r){ setTimeout(r, 800); });
+  }
+}
+
+async function deleteAllUploads() {
+  var client = _selected.uploads;
+  if (!client || !_clientUploadDocs.length) return;
+  if (!confirm('Permanently delete all ' + _clientUploadDocs.length + ' file(s)? This cannot be undone.')) return;
+  var paths = _clientUploadDocs.map(function(d) { return 'uploads/' + client.email + '/' + d.name; });
+  var res = await sb.storage.from('client-documents').remove(paths);
+  if (res.error) showToast('❌ Delete failed');
+  else { showToast('All files deleted'); _clientUploadDocs = []; renderClientUploads(); }
+}
+
+// ─── STAFF CHAT ───────────────────────────────────────────────
+var _staffChatMessages = [];
+
+async function initStaffChat(email, name) {
+  _staffChatMessages = [];
+  renderStaffChat(name);
+  await fetchStaffChatMessages(email, name);
+  subscribeStaffChat(email, name);
+
+  var chatInput = document.getElementById('chat-input');
+  var chatSend = document.getElementById('chat-send-btn');
+  if (chatInput) {
+    chatInput.oninput = function() {
+      chatSend.disabled = !chatInput.value.trim();
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+    };
+    chatInput.onkeydown = function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendStaffMessage(); }
+    };
+  }
+  document.querySelectorAll('.chat-chip').forEach(function(chip) {
+    chip.onclick = function() {
+      if (chatInput) { chatInput.value = chip.dataset.msg; chatSend.disabled = false; chatInput.focus(); }
+    };
+  });
+}
+
+async function fetchStaffChatMessages(email, name) {
+  var res = await sb.from('client_notes').select('*').eq('client_email', email).is('deleted_at', null).order('created_at', { ascending: true }).limit(100);
+  if (res.error) return;
+  _staffChatMessages = res.data || [];
+  // Mark client messages as read
+  var unread = _staffChatMessages.filter(function(m) { return m.sender_type === 'client' && !m.is_read; });
+  if (unread.length > 0) {
+    await sb.from('client_notes').update({ is_read: true, read_at: new Date().toISOString() })
+      .eq('client_email', email).eq('sender_type', 'client').eq('is_read', false);
+    delete _unreadMap[email];
+    updateUnreadBadge();
+  }
+  renderStaffChat(name || ((_selected.chat && _selected.chat.name) || ''));
+}
+
+function subscribeStaffChat(email, name) {
+  if (_chatChannel) { sb.removeChannel(_chatChannel); }
+  if (_chatPoll) { clearInterval(_chatPoll); }
+  _chatChannel = sb.channel('staff-chat:' + email.replace(/[@.]/g,'_') + ':' + Date.now())
+    .on('postgres_changes', { event:'*', schema:'public', table:'client_notes', filter:'client_email=eq.'+email }, function(payload) {
+      if (payload.eventType === 'INSERT') {
+        if (payload.new.deleted_at) return;
+        var exists = _staffChatMessages.find(function(m){ return m.id === payload.new.id; });
+        if (!exists) {
+          _staffChatMessages.push(payload.new);
+          if (payload.new.sender_type === 'client') {
+            sb.from('client_notes').update({ is_read:true, read_at:new Date().toISOString() }).eq('id', payload.new.id);
+          }
+          renderStaffChat(name);
+        }
+      } else if (payload.eventType === 'UPDATE') {
+        _staffChatMessages = _staffChatMessages.map(function(m){ return m.id === payload.new.id ? payload.new : m; });
+        renderStaffChat(name);
+      } else if (payload.eventType === 'DELETE') {
+        _staffChatMessages = _staffChatMessages.filter(function(m){ return m.id !== payload.old.id; });
+        renderStaffChat(name);
+      }
+    })
+    .subscribe(function(status){ console.log('Staff chat:', status); });
+  _chatPoll = setInterval(function() { fetchStaffChatMessages(email, name); }, 8000);
+}
+
+function renderStaffChat(clientName) {
+  var win = document.getElementById('chat-window');
+  if (!win) return;
+  var visible = _staffChatMessages.filter(function(m){ return !m.deleted_at; });
+  if (visible.length === 0) {
+    win.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-text">No messages yet.</div></div>';
+    return;
+  }
+  var html = '';
+  var lastDate = null;
+  visible.forEach(function(msg) {
+    var dg = formatDateGroup(msg.created_at);
+    if (dg !== lastDate) {
+      html += '<div class="chat-date-sep"><div class="chat-date-line"></div><span class="chat-date-text">' + escHtml(dg) + '</span><div class="chat-date-line"></div></div>';
+      lastDate = dg;
+    }
+    var isEmp = msg.sender_type === 'employee';
+    html += '<div class="chat-bubble-wrap ' + (isEmp ? 'from-employee' : 'from-client') + '">';
+    html += '<div class="chat-bubble ' + (isEmp ? 'employee-bubble' : 'client-bubble') + '">';
+    if (!isEmp) html += '<div class="chat-sender">' + escHtml(clientName) + '</div>';
+    html += '<div class="chat-text ' + (isEmp ? 'white' : 'dark') + '">' + escHtml(msg.message) + '</div>';
+    html += '<div class="chat-meta"><span class="chat-time ' + (isEmp ? 'white' : '') + '">' + formatTime(msg.created_at) + '</span>';
+    if (isEmp) html += '<span class="chat-tick">' + (msg.is_read ? ' ✓✓' : ' ✓') + '</span>';
+    html += '</div></div></div>';
+  });
+  win.innerHTML = html;
+  win.scrollTop = win.scrollHeight;
+}
+
+async function sendStaffMessage() {
+  var client = _selected.chat;
+  var chatInput = document.getElementById('chat-input');
+  var chatSend = document.getElementById('chat-send-btn');
+  if (!client || !chatInput || !chatInput.value.trim()) return;
+  var msgText = chatInput.value.trim();
+  chatInput.value = ''; chatInput.style.height = 'auto'; chatSend.disabled = true;
+  var res = await sb.from('client_notes').insert({
+    client_email: client.email, author_email: _employeeEmail,
+    message: msgText, sender_type: 'employee', is_read: false,
+    created_at: new Date().toISOString()
+  });
+  if (res.error) { showToast('❌ Could not send message'); chatInput.value = msgText; }
+}
+
+// ─── RESTORE SESSION ─────────────────────────────────────────
+(async function() {
+  var sessionRes = await sb.auth.getSession();
+  if (sessionRes.data && sessionRes.data.session && sessionRes.data.session.user) {
+    _employeeEmail = sessionRes.data.session.user.email;
+    initStaffApp();
+  }
+})();
+</script>
+</body>
+</html>
