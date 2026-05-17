@@ -494,17 +494,38 @@ async function sendCode() {
   if (!email) { alert('Please enter your staff email.'); return; }
   var btn = document.getElementById('auth-send-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+
   try {
-    var res = await sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } });
+    // Check against allowed_employees table
+    var checkRes = await sb.from('allowed_employees')
+      .select('email')
+      .eq('email', email)
+      .single();
+
+    if (checkRes.error || !checkRes.data) {
+      alert('This email is not registered as a Prime Book staff member. Please contact your administrator.');
+      btn.disabled = false; btn.textContent = 'Get Access Code';
+      return;
+    }
+
+    // Email is allowed — send OTP
+    var res = await sb.auth.signInWithOtp({ 
+      email: email, 
+      options: { shouldCreateUser: true }
+    });
+
     if (res.error) throw res.error;
+
+    _signInAttemptId = email;
     document.getElementById('auth-step-email').style.display = 'none';
     document.getElementById('auth-step-code').style.display = 'block';
     document.getElementById('auth-code-email-display').textContent = email;
     document.getElementById('auth-code').value = '';
     document.getElementById('auth-code').focus();
-    _signInAttemptId = email;
+
   } catch(err) {
     alert('Error: ' + (err.message || 'Could not send code.'));
+  } finally {
     btn.disabled = false; btn.textContent = 'Get Access Code';
   }
 }
