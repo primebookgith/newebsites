@@ -312,7 +312,7 @@
         <div class="panel-sub">Select a client then edit VAT & Corporate Tax status</div>
         <div class="card">
           <div id="comp-client-picker" class="client-picker" onclick="openClientDropdown('comp')">
-            🔍 Select Client…
+            🔍 Select a Prime Book Client…
           </div>
           <div class="client-search-wrap" id="comp-search-wrap" style="display:none">
             <input type="text" class="client-search" id="comp-search" placeholder="Search by name or email…" oninput="filterClients('comp')">
@@ -489,47 +489,6 @@ function getNextCtDue() {
 // ─── AUTH ─────────────────────────────────────────────────────
 var _signInAttemptId = null;
 
-async function sendCode() {
-  var email = document.getElementById('auth-email').value.trim().toLowerCase();
-  if (!email) { alert('Please enter your staff email.'); return; }
-  var btn = document.getElementById('auth-send-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
-
-  try {
-    // Check against allowed_employees table
-    var checkRes = await sb.from('allowed_employees')
-      .select('email')
-      .eq('email', email)
-      .single();
-
-    if (checkRes.error || !checkRes.data) {
-      alert('This email is not registered as a Prime Book staff member. Please contact your administrator.');
-      btn.disabled = false; btn.textContent = 'Get Access Code';
-      return;
-    }
-
-    // Email is allowed — send OTP
-    var res = await sb.auth.signInWithOtp({ 
-      email: email, 
-      options: { shouldCreateUser: true }
-    });
-
-    if (res.error) throw res.error;
-
-    _signInAttemptId = email;
-    document.getElementById('auth-step-email').style.display = 'none';
-    document.getElementById('auth-step-code').style.display = 'block';
-    document.getElementById('auth-code-email-display').textContent = email;
-    document.getElementById('auth-code').value = '';
-    document.getElementById('auth-code').focus();
-
-  } catch(err) {
-    alert('Error: ' + (err.message || 'Could not send code.'));
-  } finally {
-    btn.disabled = false; btn.textContent = 'Get Access Code';
-  }
-}
-
 async function verifyCode() {
   var code = document.getElementById('auth-code').value.trim();
   var email = _signInAttemptId;
@@ -537,9 +496,16 @@ async function verifyCode() {
   var btn = document.getElementById('auth-verify-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
   try {
-    var res = await sb.auth.verifyOtp({ email: email, token: code, type: 'email' });
+    var res = await sb.auth.signInWithOtp({ 
+  email: email, 
+  options: { 
+    shouldCreateUser: true,
+    emailRedirectTo: undefined
+  }
+});
     if (res.error) throw res.error;
     _employeeEmail = email;
+    sessionStorage.setItem('pb_staff_email', email);
     initStaffApp();
   } catch(err) {
     alert('Verification failed: ' + (err.message || 'Invalid or expired code.'));
@@ -775,7 +741,7 @@ async function handleDocsUpload(files) {
       ok++;
     } catch(e) { fail++; }
   }
-  btn.disabled = false; btn.innerHTML = '📁 Upload & Share with Client';
+  btn.disabled = false; btn.innerHTML = '📁 Upload and Share with Client';
   document.getElementById('docs-file-input').value = '';
   showToast(ok + ' file(s) shared with ' + client.name + (fail ? ', ' + fail + ' failed' : ''));
   await loadSharedDocs(client.email);
