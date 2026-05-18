@@ -489,6 +489,47 @@ function getNextCtDue() {
 // ─── AUTH ─────────────────────────────────────────────────────
 var _signInAttemptId = null;
 
+async function sendCode() {
+  var email = document.getElementById('auth-email').value.trim().toLowerCase();
+  if (!email) { alert('Please enter your staff email.'); return; }
+  var btn = document.getElementById('auth-send-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+
+  try {
+    // Check allowed_employees table
+    var checkRes = await sb.from('allowed_employees')
+      .select('email')
+      .eq('email', email)
+      .single();
+
+    if (checkRes.error || !checkRes.data) {
+      alert('This email is not registered as a Prime Book staff member.');
+      btn.disabled = false; btn.textContent = 'Get Access Code';
+      return;
+    }
+
+    // Send OTP
+    var res = await sb.auth.signInWithOtp({
+      email: email,
+      options: { shouldCreateUser: true }
+    });
+
+    if (res.error) throw res.error;
+
+    _signInAttemptId = email;
+    document.getElementById('auth-step-email').style.display = 'none';
+    document.getElementById('auth-step-code').style.display = 'block';
+    document.getElementById('auth-code-email-display').textContent = email;
+    document.getElementById('auth-code').value = '';
+    document.getElementById('auth-code').focus();
+
+  } catch(err) {
+    alert('Error: ' + (err.message || 'Could not send code.'));
+  } finally {
+    btn.disabled = false; btn.textContent = 'Get Access Code';
+  }
+}
+
 async function verifyCode() {
   var code = document.getElementById('auth-code').value.trim();
   var email = _signInAttemptId;
@@ -496,13 +537,11 @@ async function verifyCode() {
   var btn = document.getElementById('auth-verify-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
   try {
-    var res = await sb.auth.signInWithOtp({ 
-  email: email, 
-  options: { 
-    shouldCreateUser: true,
-    emailRedirectTo: undefined
-  }
-});
+    var res = await sb.auth.verifyOtp({
+      email: email,
+      token: code,
+      type: 'email'
+    });
     if (res.error) throw res.error;
     _employeeEmail = email;
     sessionStorage.setItem('pb_staff_email', email);
@@ -522,6 +561,7 @@ function backToEmail() {
 
 async function handleLogout() {
   if (!confirm('Sign out of the Staff Portal?')) return;
+  sessionStorage.removeItem('pb_staff_email');
   await sb.auth.signOut();
   location.reload();
 }
@@ -937,10 +977,10 @@ async function sendStaffMessage() {
 }
 
 // ─── RESTORE SESSION ─────────────────────────────────────────
-(async function() {
-  var sessionRes = await sb.auth.getSession();
-  if (sessionRes.data && sessionRes.data.session && sessionRes.data.session.user) {
-    _employeeEmail = sessionRes.data.session.user.email;
+(function() {
+  var savedEmail = sessionStorage.getItem('pb_staff_email');
+  if (savedEmail) {
+    _employeeEmail = savedEmail;
     initStaffApp();
   }
 })();
